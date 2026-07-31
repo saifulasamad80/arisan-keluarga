@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Info Arisan Warga</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans p-4 min-h-screen">
+
+  <div class="max-w-md mx-auto space-y-6">
+
+    <!-- HEADER / JUDUL -->
+    <header class="bg-blue-800 text-white p-6 rounded-3xl text-center shadow-lg">
+      <h1 class="text-3xl font-extrabold tracking-wide">ARISAN FAMILI</h1>
+      <p class="text-lg mt-1 text-blue-200">Informasi & Pembayaran</p>
+    </header>
+
+    <!-- CARD 1: INFORMASI JADWAL & LOKASI -->
+    <section class="bg-white p-6 rounded-3xl shadow-md border border-slate-200 space-y-4">
+      <h2 class="text-2xl font-bold border-b-2 border-slate-100 pb-2 text-slate-800">📍 Jadwal Berikutnya</h2>
+      
+      <div id="loading-info" class="text-xl text-slate-500 animate-pulse">Memuat data lokasi...</div>
+      
+      <div id="content-info" class="hidden space-y-3">
+        <div>
+          <span class="text-base text-slate-500 block">Tanggal Arisan:</span>
+          <span id="txt-tanggal" class="text-2xl font-bold text-blue-900">-</span>
+        </div>
+        <div>
+          <span class="text-base text-slate-500 block">Tuan Rumah:</span>
+          <span id="txt-tuanrumah" class="text-2xl font-bold text-slate-800">-</span>
+        </div>
+        <div>
+          <span class="text-base text-slate-500 block">Alamat:</span>
+          <p id="txt-alamat" class="text-xl text-slate-700 leading-snug">-</p>
+        </div>
+
+        <!-- Tombol Google Maps -->
+        <a id="btn-maps" href="#" target="_blank" 
+           class="block w-full text-center bg-emerald-600 hover:bg-emerald-700 text-white text-xl font-bold py-4 rounded-2xl shadow-md transition-all active:scale-95 mt-4">
+           🗺️ Buka Peta Google Maps
+        </a>
+      </div>
+    </section>
+
+    <!-- CARD 2: PEMBAYARAN VIA QRIS -->
+    <section class="bg-white p-6 rounded-3xl shadow-md border border-slate-200 text-center space-y-4">
+      <h2 class="text-2xl font-bold text-slate-800">💳 Pembayaran QRIS</h2>
+      <p class="text-lg text-slate-600">Scan QRIS di bawah ini menggunakan M-Banking atau E-Wallet:</p>
+      
+      <!-- Placeholder Gambar QRIS (Ganti URL Gambar ini nanti) -->
+      <div class="bg-slate-100 p-4 rounded-2xl inline-block border-2 border-dashed border-slate-300">
+        <img src="https://via.placeholder.com/250x250.png?text=Gambar+QRIS+Anda" 
+             alt="Kode QRIS Arisan" 
+             class="w-64 h-64 object-contain mx-auto rounded-xl">
+      </div>
+
+      <!-- Tombol Konfirmasi WA -->
+      <a id="btn-konfirmasi-wa" href="#" target="_blank" 
+         class="block w-full text-center bg-green-600 hover:bg-green-700 text-white text-xl font-bold py-4 rounded-2xl shadow-md transition-all active:scale-95">
+         ✅ Konfirmasi Pembayaran via WA
+      </a>
+    </section>
+
+    <!-- CARD 3: DAFTAR ANGGOTA & STATUS -->
+    <section class="bg-white p-6 rounded-3xl shadow-md border border-slate-200 space-y-4">
+      <h2 class="text-2xl font-bold text-slate-800 border-b-2 border-slate-100 pb-2">👥 Status Iuran Anggota</h2>
+      
+      <div id="loading-anggota" class="text-xl text-slate-500 animate-pulse">Memuat daftar anggota...</div>
+      
+      <ul id="list-anggota" class="space-y-3">
+        <!-- Data Anggota Di-render via JavaScript -->
+      </ul>
+    </section>
+
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // ⚠️ GANTI STRING DI BAWAH DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
+    const API_URL = "https://script.google.com/macros/s/AKfycbyq-RaiG1w8RPd9nL2ZyZTMdzwljliknl5U21eQmr7B_0V5KuN330P48HjqZ3vFglGyYw/exec";
+
+    async function loadDataArisan() {
+      try {
+        const response = await fetch(API_URL);
+        const result = await response.json();
+
+        if (result.status === "success") {
+          // 1. Render Informasi
+          document.getElementById('txt-tanggal').innerText = result.info.Tanggal || '-';
+          document.getElementById('txt-tuanrumah').innerText = result.info.TuanRumah || '-';
+          document.getElementById('txt-alamat').innerText = result.info.Alamat || '-';
+          
+          if(result.info.MapsLink) {
+            document.getElementById('btn-maps').href = result.info.MapsLink;
+          }
+
+          // Render Tombol Konfirmasi WA
+          const pesanWA = encodeURIComponent(result.info.PesanKonfirmasi || "Halo Admin, saya mau konfirmasi pembayaran.");
+          // Mengarahkan ke nomor Admin (Contoh menggunakan nomor umum / template)
+          document.getElementById('btn-konfirmasi-wa').href = `https://wa.me/?text=${pesanWA}`;
+
+          document.getElementById('loading-info').classList.add('hidden');
+          document.getElementById('content-info').classList.remove('hidden');
+
+          // 2. Render Anggota
+          const listAnggota = document.getElementById('list-anggota');
+          listAnggota.innerHTML = ''; // bersihkan placeholder
+
+          result.anggota.forEach(item => {
+            const li = document.createElement('li');
+            li.className = "flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100";
+            
+            const isLunas = item.status.toUpperCase() === 'LUNAS';
+            const badgeColor = isLunas ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-rose-100 text-rose-800 border-rose-300';
+            
+            li.innerHTML = `
+              <span class="text-xl font-medium text-slate-800">${item.nama}</span>
+              <span class="px-4 py-1 text-lg font-bold rounded-full border ${badgeColor}">
+                ${item.status}
+              </span>
+            `;
+            listAnggota.appendChild(li);
+          });
+
+          document.getElementById('loading-anggota').classList.add('hidden');
+        } else {
+          alert("Gagal mengambil data: " + result.message);
+        }
+
+      } catch (error) {
+        console.error("Error Fetching Data:", error);
+        document.getElementById('loading-info').innerText = "Gagal memuat data. Periksa koneksi internet.";
+      }
+    }
+
+    // Jalankan fungsi saat halaman terbuka
+    loadDataArisan();
+  </script>
+</body>
+</html>
