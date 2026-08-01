@@ -81,6 +81,36 @@
       </a>
     </section>
 
+	<!-- CARD BARU: RINGKASAN KEUANGAN KAS -->
+		<section class="bg-white p-6 rounded-3xl shadow-md border border-slate-200 space-y-4">
+		  <h2 class="text-2xl font-bold border-b-2 border-slate-100 pb-2 text-slate-800">📊 Laporan Keuangan</h2>
+		  
+		  <div id="loading-keuangan" class="text-xl text-slate-500 animate-pulse">Memuat data kas...</div>
+		  
+		  <div id="content-keuangan" class="hidden space-y-3">
+			<!-- Kas Masuk -->
+			<div class="flex justify-between items-center bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+			  <span class="text-lg font-medium text-slate-600">Total Kas Masuk</span>
+			  <span id="txt-kas" class="text-xl font-bold text-emerald-700">Rp 0</span>
+			</div>
+			
+			<!-- Pengeluaran -->
+			<div class="flex justify-between items-center bg-rose-50 p-3 rounded-xl border border-rose-100">
+			  <span class="text-lg font-medium text-slate-600">Pengeluaran</span>
+			  <span id="txt-pengeluaran" class="text-xl font-bold text-rose-700">Rp 0</span>
+			</div>
+
+			<!-- Garis Pembatas -->
+			<hr class="border-slate-200 border-dashed border-2">
+
+			<!-- Sisa Saldo -->
+			<div class="flex justify-between items-center bg-blue-50 p-4 rounded-xl border-2 border-blue-200">
+			  <span class="text-xl font-bold text-slate-800">SISA SALDO</span>
+			  <span id="txt-saldo" class="text-2xl font-black text-blue-900">Rp 0</span>
+			</div>
+		  </div>
+		</section>
+
     <!-- CARD 3: DAFTAR ANGGOTA & STATUS -->
     <section class="bg-white p-6 rounded-3xl shadow-md border border-slate-200 space-y-4">
       <h2 class="text-2xl font-bold text-slate-800 border-b-2 border-slate-100 pb-2">👥 Status Iuran Anggota</h2>
@@ -142,6 +172,15 @@
           });
 
           document.getElementById('loading-anggota').classList.add('hidden');
+		  // Render Keuangan (Pastikan API Anda mengirimkan object 'keuangan')
+          if (result.keuangan) {
+            document.getElementById('txt-kas').innerText = result.keuangan.kas || 'Rp 0';
+            document.getElementById('txt-pengeluaran').innerText = result.keuangan.pengeluaran || 'Rp 0';
+            document.getElementById('txt-saldo').innerText = result.keuangan.saldo || 'Rp 0';
+            
+            document.getElementById('loading-keuangan').classList.add('hidden');
+            document.getElementById('content-keuangan').classList.remove('hidden');
+          }
         } else {
           alert("Gagal mengambil data: " + result.message);
         }
