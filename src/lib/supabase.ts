@@ -1,0 +1,12 @@
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '../types/database'
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+// Hanya anon key yang boleh digunakan di frontend. service_role tidak pernah
+// dibaca dari environment aplikasi ini dan wajib tetap berada di server.
+export const supabase: SupabaseClient<Database> | null =
+  supabaseUrl && supabaseAnonKey
+    ? createClient<Database>(supabaseUrl, supabaseAnonKey)
+    : null

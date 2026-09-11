@@ -1,0 +1,4 @@
+.welcome-card { background: linear-gradient(135deg, #0f766e 0%, #115e59 100%); }
+.welcome-orb { position: absolute; border-radius: 9999px; background: rgba(255, 255, 255, 0.08); }
+.welcome-orb-one { right: -3rem; top: -4rem; height: 12rem; width: 12rem; }
+.welcome-orb-two { bottom: -5rem; right: 4rem; height: 10rem; width: 10rem; background: rgba(45, 212, 191, 0.15); }
