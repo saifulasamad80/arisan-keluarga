@@ -7,6 +7,8 @@ export type PrayerNote = Database['public']['Views']['public_prayer_notes']['Row
 export type CommunityMember = Database['public']['Views']['public_members']['Row']
 export type PublicContribution = Database['public']['Views']['public_contributions']['Row']
 export type GalleryPhoto = Database['public']['Views']['public_gallery_photos']['Row']
+export type LegacyContributionStatus = Database['public']['Views']['public_legacy_contribution_status']['Row']
+export type LegacyDeceasedPerson = Database['public']['Views']['public_legacy_deceased_people']['Row']
 
 function requireSupabase() {
   if (!supabase) throw new Error('Konfigurasi Supabase belum lengkap.')
@@ -60,6 +62,35 @@ export async function listPublicContributions() {
   return data ?? []
 }
 
+export async function listLegacyContributionStatus() {
+  const client = requireSupabase()
+  const { data, error } = await client
+    .from('public_legacy_contribution_status')
+    .select('*')
+    .order('member_name', { ascending: true })
+
+  // Frontend dapat ter-deploy lebih dulu daripada migration database. Dalam
+  // kondisi itu, jangan matikan seluruh halaman komunitas hanya karena view
+  // opsional belum tersedia; setelah migration aktif query akan langsung hidup.
+  if (error && (error.code === '42P01' || error.code === 'PGRST205')) return []
+  if (error) throw error
+  return data ?? []
+}
+
+export async function listLegacyDeceasedPeople() {
+  const client = requireSupabase()
+  const { data, error } = await client
+    .from('public_legacy_deceased_people')
+    .select('*')
+    .order('full_name', { ascending: true })
+
+  // Keep older frontend deployments usable if the optional legacy migration
+  // has not reached the database yet.
+  if (error && (error.code === '42P01' || error.code === 'PGRST205')) return []
+  if (error) throw error
+  return data ?? []
+}
+
 export async function listGalleryPhotos() {
   const client = requireSupabase()
   const { data, error } = await client
@@ -76,7 +107,7 @@ export async function listMembersForReminder() {
   const client = requireSupabase()
   const { data, error } = await client
     .from('manager_members')
-    .select('id, full_name, phone, avatar_url, role, is_active, joined_at, created_at, updated_at')
+    .select('id, full_name, phone, avatar_url, role, member_type, is_active, joined_at, created_at, updated_at')
     .eq('is_active', true)
     .order('full_name', { ascending: true })
 
@@ -134,28 +165,35 @@ export async function uploadGalleryPhoto(input: {
   return createGalleryPhoto({ ...input, imageUrl: data.publicUrl })
 }
 
-export async function createContribution(input: ContributionFormValues & { recordedBy: string }) {
+export interface ContributionSettlementResult {
+  success: boolean
+  message: string
+  settlement_id: string | null
+  total_amount: number | null
+}
+
+export async function settleContribution(input: ContributionFormValues): Promise<ContributionSettlementResult> {
   const client = requireSupabase()
-  const { data, error } = await client
-    .from('contributions')
-    .insert({
-      member_id: input.memberId,
-      period_start: input.periodStart,
-      period_end: input.periodEnd,
-      amount: input.amount,
-      status: input.status,
-      paid_at: input.status === 'paid' ? new Date().toISOString() : null,
-      recorded_by: input.recordedBy,
-    })
-    .select()
-    .single()
+  const { data, error } = await client.rpc('settle_contribution', {
+    p_member_id: input.memberId,
+    p_period_start: input.periodStart,
+    p_period_end: input.periodEnd,
+    p_period_count: input.periodCount,
+    p_pin: input.pin,
+  })
 
   if (error) throw error
-  return data
+  const result = data?.[0]
+  if (!result) throw new Error('Respons pelunasan tidak valid.')
+  return result
 }
 
 export function getCommunityErrorMessage(error: unknown) {
   const message = error instanceof Error ? error.message.toLowerCase() : ''
+
+  if (message.includes('pin bendahara') || message.includes('pelunasan') || message.includes('periode')) {
+    return error instanceof Error ? error.message : 'Pelunasan belum dapat dicatat.'
+  }
 
   if (message.includes('network') || message.includes('fetch')) {
     return 'Koneksi ke Supabase bermasalah. Periksa internet lalu coba lagi.'

@@ -5,12 +5,16 @@ import {
   getCommunityErrorMessage,
   listMembers,
   listPublicContributions,
+  listLegacyContributionStatus,
+  listLegacyDeceasedPeople,
   listGalleryPhotos,
   listMembersForReminder,
   uploadGalleryPhoto,
-  createContribution,
+  settleContribution,
   type GalleryPhoto,
   type PublicContribution,
+  type LegacyContributionStatus,
+  type LegacyDeceasedPerson,
   listPrayerNotes,
   listUpcomingEvents,
   type CommunityEvent,
@@ -23,6 +27,8 @@ interface CommunityState {
   prayerNotes: PrayerNote[]
   members: CommunityMember[]
   contributions: PublicContribution[]
+  legacyContributionStatus: LegacyContributionStatus[]
+  legacyDeceasedPeople: LegacyDeceasedPerson[]
   galleryPhotos: GalleryPhoto[]
   reminderMembers: Array<CommunityMember & { phone: string | null }>
   isSavingGallery: boolean
@@ -40,6 +46,8 @@ export function useCommunity(userId: string | null): CommunityState {
   const [prayerNotes, setPrayerNotes] = useState<PrayerNote[]>([])
   const [members, setMembers] = useState<CommunityMember[]>([])
   const [contributions, setContributions] = useState<PublicContribution[]>([])
+  const [legacyContributionStatus, setLegacyContributionStatus] = useState<LegacyContributionStatus[]>([])
+  const [legacyDeceasedPeople, setLegacyDeceasedPeople] = useState<LegacyDeceasedPerson[]>([])
   const [galleryPhotos, setGalleryPhotos] = useState<GalleryPhoto[]>([])
   const [reminderMembers, setReminderMembers] = useState<Array<CommunityMember & { phone: string | null }>>([])
   const [isLoading, setIsLoading] = useState(Boolean(supabase))
@@ -53,6 +61,8 @@ export function useCommunity(userId: string | null): CommunityState {
       setPrayerNotes([])
       setMembers([])
       setContributions([])
+      setLegacyContributionStatus([])
+      setLegacyDeceasedPeople([])
       setGalleryPhotos([])
       setReminderMembers([])
       setIsLoading(false)
@@ -63,17 +73,37 @@ export function useCommunity(userId: string | null): CommunityState {
     setError(null)
 
     try {
-      const [nextEvents, nextPrayerNotes, nextMembers, nextContributions, nextGalleryPhotos] = await Promise.all([
+      const [nextEvents, nextGalleryPhotos, nextLegacyDeceasedPeople] = await Promise.all([
         listUpcomingEvents(),
-        listPrayerNotes(),
-        listMembers(),
-        listPublicContributions(),
         listGalleryPhotos(),
+        listLegacyDeceasedPeople(),
       ])
+      let nextPrayerNotes: PrayerNote[] = []
+      let nextMembers: CommunityMember[] = []
+      let nextContributions: PublicContribution[] = []
+      let nextLegacyContributionStatus: LegacyContributionStatus[] = []
+
+      // Data keuangan, iuran, anggota, dan catatan doa tidak boleh diminta
+      // oleh anonymous. Selain mengurangi kebocoran metadata, ini mencegah
+      // halaman publik memanggil view yang memang hanya untuk authenticated.
+      if (userId) {
+        const [prayerNotes, members, contributions, legacyContributionStatus] = await Promise.all([
+          listPrayerNotes(),
+          listMembers(),
+          listPublicContributions(),
+          listLegacyContributionStatus(),
+        ])
+        nextPrayerNotes = prayerNotes
+        nextMembers = members
+        nextContributions = contributions
+        nextLegacyContributionStatus = legacyContributionStatus
+      }
       setEvents(nextEvents)
       setPrayerNotes(nextPrayerNotes)
       setMembers(nextMembers)
       setContributions(nextContributions)
+      setLegacyContributionStatus(nextLegacyContributionStatus)
+      setLegacyDeceasedPeople(nextLegacyDeceasedPeople)
       setGalleryPhotos(nextGalleryPhotos)
       if (userId) {
         setReminderMembers(await listMembersForReminder())
@@ -114,7 +144,8 @@ export function useCommunity(userId: string | null): CommunityState {
     setIsSavingContribution(true)
     setError(null)
     try {
-      await createContribution({ ...values, recordedBy: userId })
+      const result = await settleContribution(values)
+      if (!result.success) throw new Error(result.message)
       await reload()
       return true
     } catch (saveError) {
@@ -134,6 +165,8 @@ export function useCommunity(userId: string | null): CommunityState {
     prayerNotes,
     members,
     contributions,
+    legacyContributionStatus,
+    legacyDeceasedPeople,
     galleryPhotos,
     reminderMembers,
     isSavingGallery,

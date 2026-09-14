@@ -7,7 +7,7 @@ type ExpenseInput = {
   description: string
   amount: number
   category: string
-  createdBy: string
+  pin: string
 }
 
 export interface CashSummary {
@@ -49,20 +49,25 @@ export async function countActiveMembers() {
 
 export async function createExpense(input: ExpenseInput) {
   const client = requireSupabase()
-  const { data, error } = await client
-    .from('cash_transactions')
-    .insert({
-      type: 'expense',
-      description: input.description,
-      amount: input.amount,
-      category: input.category,
-      created_by: input.createdBy,
-    })
-    .select()
-    .single()
+  const { data, error } = await client.rpc('create_expense', {
+    p_description: input.description,
+    p_amount: input.amount,
+    p_category: input.category,
+    p_pin: input.pin,
+  })
 
   if (error) throw error
-  return data
+  const result = data?.[0]
+  if (!result) throw new Error('Respons pengeluaran tidak valid.')
+  if (!result.success) throw new Error(result.message)
+
+  const transaction = await client
+    .from('public_cash_transactions')
+    .select('*')
+    .eq('id', result.transaction_id ?? '')
+    .single()
+  if (transaction.error) throw transaction.error
+  return transaction.data
 }
 
 function getCurrentMonthRange(today = new Date()) {
@@ -106,6 +111,10 @@ export function summarizeCashTransactions(transactions: CashTransaction[], today
 
 export function getFinanceErrorMessage(error: unknown) {
   const message = error instanceof Error ? error.message.toLowerCase() : ''
+
+  if (message.includes('pin bendahara') || message.includes('pengeluaran')) {
+    return error instanceof Error ? error.message : 'Pengeluaran belum dapat dicatat.'
+  }
 
   if (message.includes('permission') || message.includes('row-level security')) {
     return 'Anda tidak memiliki izin untuk melakukan operasi keuangan ini.'

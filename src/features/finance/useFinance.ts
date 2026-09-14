@@ -70,7 +70,7 @@ export function useFinance(userId: string | null): FinanceState {
         description: values.description,
         amount: values.amount,
         category: values.category,
-        createdBy: userId,
+        pin: values.pin,
       })
       setTransactions((current) => [transaction, ...current])
       return true

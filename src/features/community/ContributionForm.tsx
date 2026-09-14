@@ -3,13 +3,19 @@ import type { FormEvent } from 'react'
 import { CheckCircle2, X } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import type { CommunityMember } from './communityRepository'
+import { getContributionMemberType, getContributionSplit, calculateContributionTotal, type ContributionMemberType } from '../finance/contributionRules'
+
+function getMemberDisplayName(member: CommunityMember) {
+  const name = member.full_name.trim()
+  return name && !name.includes('@') ? name : 'Nama belum diatur'
+}
 
 export interface ContributionFormValues {
   memberId: string
   periodStart: string
   periodEnd: string
-  amount: number
-  status: 'paid' | 'pending'
+  periodCount: number
+  pin: string
 }
 
 interface ContributionFormProps {
@@ -23,20 +29,27 @@ export function ContributionForm({ members, onClose, onSubmit, error }: Contribu
   const [memberId, setMemberId] = useState(members[0]?.id ?? '')
   const [periodStart, setPeriodStart] = useState('')
   const [periodEnd, setPeriodEnd] = useState('')
-  const [amount, setAmount] = useState('')
-  const [status, setStatus] = useState<'paid' | 'pending'>('paid')
+  const [periodCount, setPeriodCount] = useState('1')
+  const [pin, setPin] = useState('')
   const [validationError, setValidationError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const selectedMember = members.find((member) => member.id === memberId)
+  const memberType: ContributionMemberType = getContributionMemberType(selectedMember?.member_type)
+  const split = getContributionSplit(memberType)
+  const parsedPeriodCount = Number(periodCount)
+  const validPeriodCount = Number.isInteger(parsedPeriodCount) && parsedPeriodCount > 0
+  const total = validPeriodCount ? calculateContributionTotal(memberType, parsedPeriodCount) : 0
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!memberId) return setValidationError('Pilih anggota terlebih dahulu.')
     if (!periodStart || !periodEnd || periodEnd < periodStart) return setValidationError('Periksa periode pembayaran.')
-    if (Number(amount) <= 0) return setValidationError('Nominal harus lebih dari 0.')
+    if (!Number.isInteger(Number(periodCount)) || Number(periodCount) < 1) return setValidationError('Jumlah periode harus berupa bilangan bulat positif.')
+    if (!/^\d{4}$/.test(pin)) return setValidationError('PIN bendahara harus terdiri dari 4 digit.')
 
     setValidationError(null)
     setIsSubmitting(true)
-    const saved = await onSubmit({ memberId, periodStart, periodEnd, amount: Number(amount), status })
+    const saved = await onSubmit({ memberId, periodStart, periodEnd, periodCount: Number(periodCount), pin })
     setIsSubmitting(false)
     if (saved) onClose()
   }
@@ -50,10 +63,11 @@ export function ContributionForm({ members, onClose, onSubmit, error }: Contribu
         </div>
         {(error || validationError) && <p role="alert" className="mb-4 rounded-xl bg-rose-50 px-3 py-2 text-xs leading-relaxed text-rose-700">{validationError ?? error}</p>}
         <form className="space-y-4" onSubmit={(event) => void handleSubmit(event)}>
-          <label className="block text-sm font-semibold text-slate-700">Nama anggota<select value={memberId} onChange={(event) => setMemberId(event.target.value)} className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-normal outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"><option value="">Pilih anggota</option>{members.filter((member) => member.is_active).map((member) => <option key={member.id} value={member.id}>{member.full_name}</option>)}</select></label>
+          <label className="block text-sm font-semibold text-slate-700">Nama anggota<select value={memberId} onChange={(event) => setMemberId(event.target.value)} className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-normal outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"><option value="">Pilih anggota</option>{members.filter((member) => member.is_active).map((member) => <option key={member.id} value={member.id}>{getMemberDisplayName(member)}</option>)}</select></label>
           <div className="grid gap-3 sm:grid-cols-2"><label className="block text-sm font-semibold text-slate-700">Mulai periode<input type="date" value={periodStart} onChange={(event) => setPeriodStart(event.target.value)} className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-normal outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100" /></label><label className="block text-sm font-semibold text-slate-700">Akhir periode<input type="date" value={periodEnd} onChange={(event) => setPeriodEnd(event.target.value)} className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-normal outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100" /></label></div>
-          <label className="block text-sm font-semibold text-slate-700">Nominal (Rupiah)<input type="number" min="1" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="Contoh: 100000" className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-normal outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100" /></label>
-          <label className="block text-sm font-semibold text-slate-700">Status<select value={status} onChange={(event) => setStatus(event.target.value as 'paid' | 'pending')} className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-normal outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"><option value="paid">Sudah lunas</option><option value="pending">Belum lunas</option></select></label>
+          <label className="block text-sm font-semibold text-slate-700">Jumlah periode<input type="number" min="1" step="1" value={periodCount} onChange={(event) => setPeriodCount(event.target.value)} className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-normal outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100" /></label>
+          <section className="rounded-xl bg-teal-50 p-3 text-xs text-teal-900"><p className="font-bold">Preview pembagian dana · {memberType === 'arisan' ? 'Anggota Arisan' : 'Anggota Non-Arisan'}</p><div className="mt-2 grid grid-cols-2 gap-1.5"><span>Arisan: Rp{split.arisan.toLocaleString('id-ID')}</span><span>Wajib: Rp{split.wajib.toLocaleString('id-ID')}</span><span>Sosial: Rp{split.sosial.toLocaleString('id-ID')}</span><span>Konsumsi: Rp{split.konsumsi.toLocaleString('id-ID')}</span><span>Kaos: Rp{split.kaos.toLocaleString('id-ID')}</span></div><p className="mt-2 border-t border-teal-200 pt-2 font-bold">Total: Rp{total.toLocaleString('id-ID')} untuk {periodCount || 0} periode</p></section>
+          <label className="block text-sm font-semibold text-slate-700">PIN bendahara<input type="password" inputMode="numeric" autoComplete="current-password" maxLength={4} value={pin} onChange={(event) => setPin(event.target.value.replace(/\D/g, ''))} placeholder="4 digit" className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-normal outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100" /></label>
           <div className="flex gap-3 pt-2"><Button type="button" variant="outline" className="flex-1" onClick={onClose}>Batal</Button><Button type="submit" className="flex-1" disabled={isSubmitting}><CheckCircle2 size={17} /> {isSubmitting ? 'Menyimpan...' : 'Simpan'}</Button></div>
         </form>
       </div>

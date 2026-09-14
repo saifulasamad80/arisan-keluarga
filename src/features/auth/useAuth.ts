@@ -3,7 +3,7 @@ import type { Session } from '@supabase/supabase-js'
 import type { Database } from '../../types/database'
 import { supabase } from '../../lib/supabase'
 
-type Profile = Database['public']['Tables']['profiles']['Row']
+type Profile = Omit<Database['public']['Tables']['profiles']['Row'], 'phone'>
 
 interface AuthState {
   session: Session | null
@@ -84,7 +84,7 @@ export function useAuth(): AuthState {
 
     void supabase
       .from('profiles')
-      .select('*')
+      .select('id, full_name, avatar_url, role, member_type, arrears_periods, is_active, joined_at, created_at, updated_at')
       .eq('id', session.user.id)
       .maybeSingle()
       .then(({ data, error: profileError }) => {

@@ -1,8 +1,8 @@
-import { BookHeart, Camera, CircleDollarSign, LayoutDashboard, UsersRound, WalletCards } from 'lucide-react'
+import { BookHeart, Camera, CircleDollarSign, Heart, LayoutDashboard, UsersRound, WalletCards } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '../lib/utils'
 
-export type AppTab = 'beranda' | 'keuangan' | 'iuran' | 'doa' | 'anggota' | 'galeri'
+export type AppTab = 'beranda' | 'keuangan' | 'iuran' | 'doa' | 'anggota' | 'almarhum' | 'galeri'
 
 interface BottomNavProps {
   activeTab: AppTab
@@ -15,6 +15,7 @@ const navigation: Array<{ id: AppTab; label: string; icon: LucideIcon }> = [
   { id: 'iuran', label: 'Iuran', icon: CircleDollarSign },
   { id: 'doa', label: 'Buku Doa', icon: BookHeart },
   { id: 'anggota', label: 'Anggota', icon: UsersRound },
+  { id: 'almarhum', label: 'Almarhum', icon: Heart },
   { id: 'galeri', label: 'Galeri', icon: Camera },
 ]
 

@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Eye, EyeOff, LoaderCircle, LockKeyhole, Mail, ShieldCheck, UserRound } from 'lucide-react'
+import { Eye, EyeOff, LoaderCircle, LockKeyhole, Mail, ShieldCheck } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -8,7 +8,6 @@ import { formatAuthError } from './useAuth'
 import { supabase } from '../../lib/supabase'
 
 const authSchema = z.object({
-  fullName: z.string().trim(),
   email: z.string().trim().email('Masukkan email yang valid'),
   password: z.string().min(6, 'Password minimal 6 karakter'),
 })
@@ -22,7 +21,6 @@ interface AuthScreenProps {
 }
 
 export function AuthScreen({ initialError, onClose }: AuthScreenProps) {
-  const [isRegistering, setIsRegistering] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(
@@ -31,18 +29,11 @@ export function AuthScreen({ initialError, onClose }: AuthScreenProps) {
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors },
   } = useForm<AuthFormInput, unknown, AuthFormValues>({
     resolver: zodResolver(authSchema),
-    defaultValues: { fullName: '', email: '', password: '' },
+    defaultValues: { email: '', password: '' },
   })
-
-  function switchMode() {
-    setIsRegistering((current) => !current)
-    setMessage(null)
-    reset()
-  }
 
   async function onSubmit(values: AuthFormValues) {
     if (!supabase) return
@@ -50,33 +41,12 @@ export function AuthScreen({ initialError, onClose }: AuthScreenProps) {
     setIsSubmitting(true)
     setMessage(null)
 
-    if (isRegistering && values.fullName.length < 2) {
-      setMessage({ type: 'error', text: 'Nama minimal 2 karakter.' })
-      setIsSubmitting(false)
-      return
-    }
-
-    const result = isRegistering
-      ? await supabase.auth.signUp({
-          email: values.email,
-          password: values.password,
-          options: { data: { full_name: values.fullName } },
-        })
-      : await supabase.auth.signInWithPassword({ email: values.email, password: values.password })
+    const result = await supabase.auth.signInWithPassword({ email: values.email, password: values.password })
 
     setIsSubmitting(false)
 
     if (result.error) {
       setMessage({ type: 'error', text: formatAuthError(result.error.message) })
-      return
-    }
-
-    if (isRegistering && !result.data.session) {
-      setMessage({
-        type: 'success',
-        text: 'Akun berhasil dibuat. Silakan konfirmasi email sebelum masuk.',
-      })
-      reset({ fullName: values.fullName, email: values.email, password: '' })
       return
     }
 
@@ -92,12 +62,10 @@ export function AuthScreen({ initialError, onClose }: AuthScreenProps) {
           </div>
           <p className="mt-4 text-sm font-bold uppercase tracking-[0.18em] text-teal-700">Arisan IKT</p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
-            {isRegistering ? 'Buat akun pengurus' : 'Selamat datang kembali'}
+            Selamat datang kembali
           </h1>
           <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-500">
-            {isRegistering
-              ? 'Daftar untuk bergabung dan mengelola kegiatan keluarga IKT.'
-              : 'Masuk untuk mengelola arisan, kas, anggota, dan buku doa IKT.'}
+            Masuk untuk mengelola arisan, kas, anggota, dan buku doa IKT.
           </p>
         </div>
 
@@ -122,22 +90,6 @@ export function AuthScreen({ initialError, onClose }: AuthScreenProps) {
           )}
 
           <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-            {isRegistering && (
-              <label className="block text-sm font-semibold text-slate-700">
-                Nama lengkap
-                <div className="relative mt-1.5">
-                  <UserRound className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={17} />
-                  <input
-                    {...register('fullName')}
-                    autoComplete="name"
-                    placeholder="Nama lengkap"
-                    className="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-3 text-sm font-normal outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
-                  />
-                </div>
-                {errors.fullName && <span className="mt-1 block text-xs font-normal text-rose-600">{errors.fullName.message}</span>}
-              </label>
-            )}
-
             <label className="block text-sm font-semibold text-slate-700">
               Email
               <div className="relative mt-1.5">
@@ -160,7 +112,7 @@ export function AuthScreen({ initialError, onClose }: AuthScreenProps) {
                 <input
                   {...register('password')}
                   type={showPassword ? 'text' : 'password'}
-                  autoComplete={isRegistering ? 'new-password' : 'current-password'}
+                  autoComplete="current-password"
                   placeholder="Minimal 6 karakter"
                   className="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-11 text-sm font-normal outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
                 />
@@ -178,16 +130,13 @@ export function AuthScreen({ initialError, onClose }: AuthScreenProps) {
 
             <Button type="submit" className="mt-2 w-full" disabled={isSubmitting}>
               {isSubmitting && <LoaderCircle className="animate-spin" size={17} />}
-              {isSubmitting ? 'Memproses...' : isRegistering ? 'Buat akun' : 'Masuk'}
+              {isSubmitting ? 'Memproses...' : 'Masuk'}
             </Button>
           </form>
 
-          <div className="mt-6 border-t border-slate-100 pt-5 text-center text-sm text-slate-500">
-            {isRegistering ? 'Sudah memiliki akun?' : 'Belum memiliki akun?'}{' '}
-            <button type="button" onClick={switchMode} className="font-semibold text-teal-700 hover:text-teal-800">
-              {isRegistering ? 'Masuk di sini' : 'Daftar sekarang'}
-            </button>
-          </div>
+          <p className="mt-6 border-t border-slate-100 pt-5 text-center text-sm leading-relaxed text-slate-500">
+            Akun pengurus hanya dapat didaftarkan oleh admin web.
+          </p>
         </div>
 
         <p className="mt-5 text-center text-xs leading-relaxed text-slate-400">

@@ -8,6 +8,7 @@ const expenseSchema = z.object({
   description: z.string().min(3, 'Keterangan minimal 3 karakter'),
   amount: z.coerce.number().positive('Nominal harus lebih dari 0'),
   category: z.enum(['Operasional', 'Kegiatan', 'Konsumsi', 'Lainnya']),
+  pin: z.string().regex(/^\d{4}$/, 'PIN bendahara harus terdiri dari 4 digit'),
 })
 
 type ExpenseFormInput = z.input<typeof expenseSchema>
@@ -26,7 +27,7 @@ export function ExpenseForm({ onClose, onSubmit, error }: ExpenseFormProps) {
     formState: { errors, isSubmitting },
   } = useForm<ExpenseFormInput, unknown, ExpenseFormValues>({
     resolver: zodResolver(expenseSchema),
-    defaultValues: { description: '', amount: 0, category: 'Operasional' },
+    defaultValues: { description: '', amount: 0, category: 'Operasional', pin: '' },
   })
 
   return (
@@ -76,6 +77,11 @@ export function ExpenseForm({ onClose, onSubmit, error }: ExpenseFormProps) {
               <option>Konsumsi</option>
               <option>Lainnya</option>
             </select>
+          </label>
+          <label className="block text-sm font-semibold text-slate-700">
+            PIN bendahara
+            <input {...register('pin')} type="password" inputMode="numeric" autoComplete="current-password" maxLength={4} placeholder="4 digit" className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-normal outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-100" />
+            {errors.pin && <span className="mt-1 block text-xs font-normal text-rose-600">{errors.pin.message}</span>}
           </label>
           <div className="flex gap-3 pt-2">
             <Button type="button" variant="outline" className="flex-1" onClick={onClose}>Batal</Button>

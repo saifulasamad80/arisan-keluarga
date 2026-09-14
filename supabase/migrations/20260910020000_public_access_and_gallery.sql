@@ -87,8 +87,6 @@ using (
 );
 
 -- View publik tidak membocorkan pembuat, catatan internal, atau metadata sensitif.
--- View sengaja bukan security_invoker: policy baca tabel lama adalah authenticated,
--- sedangkan view ini mengekspos hanya kolom yang memang diperuntukkan bagi publik.
 drop view if exists public.public_cash_transactions;
 create view public.public_cash_transactions
 as
@@ -147,6 +145,7 @@ grant select on public.public_gallery_photos to anon, authenticated;
 -- Nomor kontak hanya dapat dibaca oleh admin/bendahara untuk pengingat.
 drop view if exists public.manager_members;
 create view public.manager_members
+with (security_invoker = true)
 as
 select id, full_name, phone, avatar_url, role, is_active, joined_at, created_at, updated_at
 from public.profiles
