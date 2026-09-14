@@ -6,17 +6,14 @@ import {
   CalendarDays,
   Camera,
   ChevronRight,
-  CircleDollarSign,
   Copy,
   ExternalLink,
-  HandCoins,
   Heart,
   Images,
   LogIn,
   LogOut,
   MapPin,
   Menu,
-  Minus,
   Pencil,
   Plus,
   RefreshCw,
@@ -24,6 +21,7 @@ import {
   Trash2,
   UsersRound,
   WalletCards,
+  X,
 } from 'lucide-react'
 import { BottomNav, type AppTab } from './components/BottomNav'
 import { Button } from './components/ui/button'
@@ -97,7 +95,7 @@ function App() {
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [textScale, setTextScale] = useState(() => {
     const stored = Number(window.localStorage.getItem('ikt-text-scale'))
-    return Number.isFinite(stored) && stored >= 0.9 && stored <= 1.2 ? stored : 1
+    return Number.isFinite(stored) && stored >= 1 && stored <= 1.3 ? stored : 1
   })
   const finance = useFinance(session?.user.id ?? null)
   const community = useCommunity(session?.user.id ?? null)
@@ -144,7 +142,7 @@ function App() {
   }, [activeTab, isMasterAdmin])
 
   useEffect(() => {
-    document.documentElement.style.fontSize = `${textScale * 100}%`
+    document.documentElement.style.fontSize = `${18 * textScale}px`
     window.localStorage.setItem('ikt-text-scale', String(textScale))
     return () => {
       document.documentElement.style.fontSize = ''
@@ -183,33 +181,28 @@ function App() {
     if (activeTab === 'galeri') {
       return <GalleryPage photos={community.galleryPhotos} isLoading={community.isLoading} error={community.error} canManage={canManage} onRetry={() => void community.reload()} onAdd={() => openEditor({ type: 'gallery' })} onEdit={(photo) => openEditor({ type: 'gallery', photo })} onDelete={(photo) => openDelete({ entity: 'gallery', id: photo.id, label: photo.title })} />
     }
-    return <HomePage events={community.events} winners={community.winners} summary={summary} fundBalances={fundBalances} memberCount={community.members.length} isLoggedIn={Boolean(session)} canManage={canManage} isLoading={community.isLoading} error={community.error} onRetry={() => void community.reload()} onNavigate={setActiveTab} onAddEvent={() => openEditor({ type: 'event' })} onEditEvent={(event) => openEditor({ type: 'event', event })} onDeleteEvent={(event) => openDelete({ entity: 'event', id: event.id, label: event.host_name || event.title })} onAddWinner={() => openEditor({ type: 'winner' })} onEditWinner={(winner) => openEditor({ type: 'winner', winner })} onDeleteWinner={(winner) => openDelete({ entity: 'winner', id: winner.id, label: winner.winner_name })} />
+    return <HomePage events={community.events} photos={community.galleryPhotos} winners={community.winners} summary={summary} fundBalances={fundBalances} memberCount={community.members.length} isLoggedIn={Boolean(session)} canManage={canManage} isLoading={community.isLoading} error={community.error} onRetry={() => void community.reload()} onOpenGallery={() => setActiveTab('galeri')} onAddEvent={() => openEditor({ type: 'event' })} onEditEvent={(event) => openEditor({ type: 'event', event })} onDeleteEvent={(event) => openDelete({ entity: 'event', id: event.id, label: event.host_name || event.title })} onAddWinner={() => openEditor({ type: 'winner' })} onEditWinner={(winner) => openEditor({ type: 'winner', winner })} onDeleteWinner={(winner) => openDelete({ entity: 'winner', id: winner.id, label: winner.winner_name })} />
   }
 
   return (
-    <div className="min-h-screen bg-[#f7fbfa] pb-28 text-slate-700">
-      <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex min-h-16 w-full max-w-3xl items-center justify-between gap-3 px-4 sm:px-6">
-          <button type="button" className="flex items-center gap-3 text-left" onClick={() => setActiveTab('beranda')}>
-            <span className="flex size-10 items-center justify-center rounded-xl bg-teal-700 text-sm font-black text-white shadow-lg shadow-teal-900/15">IKT</span>
-            <span><strong className="block text-sm text-slate-900">IKT Connect</strong><small className="block text-[11px] text-slate-500">Arisan · Keluarga · Doa</small></span>
+    <div className="min-h-screen bg-[#f4efe6] pb-40 text-stone-800">
+      <header className="sticky top-0 z-20 border-b-4 border-teal-800 bg-white">
+        <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
+          <button type="button" className="flex min-h-12 items-center gap-3 text-left" onClick={() => setActiveTab('beranda')}>
+            <span className="flex size-12 items-center justify-center rounded-2xl bg-teal-800 text-base font-black text-white shadow-lg shadow-teal-900/20">IKT</span>
+            <span><strong className="block text-base text-stone-950">IKT Connect</strong><small className="block text-sm font-semibold text-stone-700">Arisan · Keluarga · Doa</small></span>
           </button>
-          <div className="flex items-center gap-2">
-            <span className="hidden rounded-full bg-emerald-50 px-3 py-1.5 text-[11px] font-semibold text-emerald-700 sm:inline-flex">Informasi publik</span>
-            <div className="hidden items-center gap-1 rounded-xl border border-slate-200 p-1 sm:flex" aria-label="Ukuran teks">
-              <button type="button" className="flex size-8 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100" onClick={() => setTextScale((current) => Math.max(0.9, Number((current - 0.1).toFixed(1))))} aria-label="Perkecil teks"><Minus size={15} /></button>
-              <span className="px-1 text-[10px] font-bold text-slate-500" aria-live="polite">A</span>
-              <button type="button" className="flex size-8 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100" onClick={() => setTextScale((current) => Math.min(1.2, Number((current + 0.1).toFixed(1))))} aria-label="Perbesar teks"><Plus size={15} /></button>
-            </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <TextScaleControl value={textScale} onChange={setTextScale} />
             {session && profile?.role === 'admin' && <Button size="sm" className="hidden md:inline-flex" onClick={() => setShowAdminRegister(true)}>Daftarkan pengurus</Button>}
-            {session ? <Button size="sm" variant="outline" onClick={() => void signOut()}><LogOut size={15} /> Keluar</Button> : <Button size="sm" variant="outline" onClick={() => setShowAuth(true)}><LogIn size={15} /> Pengurus</Button>}
-            <button type="button" className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 md:hidden" onClick={() => setShowMobileMenu((current) => !current)} aria-label="Buka menu"><Menu size={20} /></button>
+            {session ? <Button size="sm" variant="outline" onClick={() => void signOut()}><LogOut size={17} /> Keluar</Button> : <Button size="sm" variant="outline" onClick={() => setShowAuth(true)}><LogIn size={17} /> Pengurus</Button>}
+            <button type="button" className="flex size-12 items-center justify-center rounded-2xl bg-stone-100 text-stone-800 hover:bg-amber-100 md:hidden" onClick={() => setShowMobileMenu((current) => !current)} aria-label="Buka menu"><Menu size={22} /></button>
           </div>
         </div>
-        {showMobileMenu && <div className="border-t border-slate-100 bg-white px-4 py-3 text-sm text-slate-500 md:hidden"><p>Anggota dapat membaca informasi tanpa membuat akun. Login hanya dibutuhkan saat pengurus mencatat data.</p>{session && profile?.role === 'admin' && <Button size="sm" className="mt-3 w-full" onClick={() => { setShowAdminRegister(true); setShowMobileMenu(false) }}>Daftarkan pengurus</Button>}</div>}
+        {showMobileMenu && <div className="border-t-2 border-stone-200 bg-amber-50 px-4 py-4 text-base leading-relaxed text-stone-800 md:hidden"><p>Anggota dapat membaca informasi tanpa membuat akun. Login hanya untuk pengurus yang mencatat data.</p>{session && profile?.role === 'admin' && <Button className="mt-3 w-full" onClick={() => { setShowAdminRegister(true); setShowMobileMenu(false) }}>Daftarkan pengurus</Button>}</div>}
       </header>
 
-      <main className="mx-auto w-full max-w-3xl px-4 pb-6 pt-6 sm:px-6">{error && <Notice message={error} tone="warning" />}{renderPage()}</main>
+      <main className="mx-auto w-full max-w-3xl px-4 pb-8 pt-6 sm:px-6">{error && <Notice message={error} tone="warning" />}{renderPage()}</main>
       <BottomNav activeTab={activeTab} showAudit={isMasterAdmin} onChange={(tab) => { setActiveTab(tab); setShowMobileMenu(false) }} />
 
       {showExpenseForm && <ExpenseForm onClose={() => setShowExpenseForm(false)} onSubmit={async (values) => { const saved = await finance.createExpense(values); if (saved) setShowExpenseForm(false) }} error={finance.error} />}
@@ -258,11 +251,92 @@ function AuthModal({ onClose }: { onClose: () => void }) {
   return <div className="fixed inset-0 z-40 overflow-y-auto bg-slate-950/50 px-4 py-8"><div className="mx-auto max-w-md"><AuthScreen onClose={onClose} /></div></div>
 }
 
-function HomePage({ events, winners, summary, fundBalances, memberCount, isLoggedIn, canManage, isLoading, error, onRetry, onNavigate, onAddEvent, onEditEvent, onDeleteEvent, onAddWinner, onEditWinner, onDeleteWinner }: { events: CommunityEvent[]; winners: ArisanWinner[]; summary: ReturnType<typeof summarizeCashTransactions>; fundBalances: ReturnType<typeof summarizeFundBalances>; memberCount: number; isLoggedIn: boolean; canManage: boolean; isLoading: boolean; error: string | null; onRetry: () => void; onNavigate: (tab: AppTab) => void; onAddEvent: () => void; onEditEvent: (event: CommunityEvent) => void; onDeleteEvent: (event: CommunityEvent) => void; onAddWinner: () => void; onEditWinner: (winner: ArisanWinner) => void; onDeleteWinner: (winner: ArisanWinner) => void }) {
+function TextScaleControl({ value, onChange }: { value: number; onChange: (next: number) => void }) {
+  return (
+    <div className="flex items-center gap-1 rounded-2xl border-2 border-stone-300 bg-stone-50 p-1" aria-label="Ukuran teks">
+      <button type="button" className="flex size-11 items-center justify-center rounded-xl text-sm font-bold text-stone-800 hover:bg-white" onClick={() => onChange(Math.max(1, Number((value - 0.1).toFixed(1))))} aria-label="Perkecil teks">A</button>
+      <span className="min-w-10 text-center text-sm font-black text-teal-800" aria-live="polite">{Math.round(value * 100)}%</span>
+      <button type="button" className="flex size-11 items-center justify-center rounded-xl text-xl font-black text-stone-900 hover:bg-white" onClick={() => onChange(Math.min(1.3, Number((value + 0.1).toFixed(1))))} aria-label="Perbesar teks">A</button>
+    </div>
+  )
+}
+
+function PhotoViewer({ photo, onClose }: { photo: GalleryPhoto; onClose: () => void }) {
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = previousOverflow
+    }
+  }, [onClose])
+
+  return (
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-stone-950/85 p-4" role="dialog" aria-modal="true" aria-labelledby="gallery-viewer-title" onClick={onClose}>
+      <div className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-stone-950" onClick={(event) => event.stopPropagation()}>
+        <Button type="button" variant="ghost" size="icon" className="absolute right-3 top-3 z-10 bg-stone-900/80 text-white hover:bg-stone-800 hover:text-white" onClick={onClose} aria-label="Tutup foto">
+          <X size={22} />
+        </Button>
+        <img src={photo.image_url} alt={photo.title} className="max-h-[75vh] w-full object-contain" />
+        <div className="bg-white p-4">
+          <h2 id="gallery-viewer-title" className="text-xl font-black text-stone-950">{photo.title}</h2>
+          {photo.caption && <p className="mt-1 text-base leading-relaxed text-stone-700">{photo.caption}</p>}
+          {photo.taken_on && <p className="mt-2 text-sm font-semibold text-stone-600">{formatDate(photo.taken_on)}</p>}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function HomePhotoHighlight({ photos, onOpenGallery }: { photos: GalleryPhoto[]; onOpenGallery: () => void }) {
+  const [openedPhoto, setOpenedPhoto] = useState<GalleryPhoto | null>(null)
+  const featured = photos[0]
+  const more = photos.slice(1, 3)
+
+  if (!featured) return null
+
+  return (
+    <section className="space-y-3" aria-labelledby="home-photos-title">
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-[0.08em] text-teal-800">Kenangan arisan</p>
+          <h2 id="home-photos-title" className="mt-1 text-xl font-black text-stone-950">Momen terbaru keluarga</h2>
+        </div>
+        <Button type="button" variant="outline" size="sm" onClick={onOpenGallery}>Semua foto</Button>
+      </div>
+      <button type="button" className="relative block w-full overflow-hidden rounded-3xl border-2 border-stone-300 bg-stone-900 text-left shadow-lg shadow-stone-900/15" onClick={() => setOpenedPhoto(featured)}>
+        <img src={featured.image_url} alt={featured.title} className="aspect-[4/3] w-full object-cover" />
+        <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-stone-950/85 via-stone-950/40 to-transparent p-4 text-white">
+          <strong className="block text-lg font-black leading-snug">{featured.title}</strong>
+          {featured.taken_on && <small className="mt-1 block text-sm font-semibold text-amber-200">{formatDate(featured.taken_on)}</small>}
+          <small className="mt-2 block text-sm font-semibold text-white/90">Ketuk untuk melihat ukuran penuh</small>
+        </span>
+      </button>
+      {more.length > 0 && (
+        <div className="grid grid-cols-2 gap-3">
+          {more.map((photo) => (
+            <button key={photo.id} type="button" className="overflow-hidden rounded-2xl border-2 border-stone-300 bg-white text-left shadow-sm" onClick={() => setOpenedPhoto(photo)}>
+              <img src={photo.image_url} alt={photo.title} loading="lazy" className="aspect-square w-full object-cover" />
+              <span className="block truncate px-3 py-2 text-sm font-bold text-stone-900">{photo.title}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      {openedPhoto && <PhotoViewer photo={openedPhoto} onClose={() => setOpenedPhoto(null)} />}
+    </section>
+  )
+}
+
+function HomePage({ events, photos, winners, summary, fundBalances, memberCount, isLoggedIn, canManage, isLoading, error, onRetry, onOpenGallery, onAddEvent, onEditEvent, onDeleteEvent, onAddWinner, onEditWinner, onDeleteWinner }: { events: CommunityEvent[]; photos: GalleryPhoto[]; winners: ArisanWinner[]; summary: ReturnType<typeof summarizeCashTransactions>; fundBalances: ReturnType<typeof summarizeFundBalances>; memberCount: number; isLoggedIn: boolean; canManage: boolean; isLoading: boolean; error: string | null; onRetry: () => void; onOpenGallery: () => void; onAddEvent: () => void; onEditEvent: (event: CommunityEvent) => void; onDeleteEvent: (event: CommunityEvent) => void; onAddWinner: () => void; onEditWinner: (winner: ArisanWinner) => void; onDeleteWinner: (winner: ArisanWinner) => void }) {
   const upcoming = events.find((item) => new Date(item.starts_at).getTime() >= Date.now()) ?? events.at(-1) ?? null
   return (
     <section className="space-y-5" aria-labelledby="home-title">
       <PageHeading eyebrow="Pusat informasi keluarga" title="Selamat datang di IKT Connect" description="Agenda, lokasi, buku doa, dan rekening transfer dapat dibaca tanpa login. Kas dan status iuran hanya tampil setelah pengurus masuk." />
+      <HomePhotoHighlight photos={photos} onOpenGallery={onOpenGallery} />
       {isLoggedIn ? (
         <section className="welcome-card relative overflow-hidden rounded-3xl p-5 text-white shadow-lg shadow-teal-900/10 sm:p-7">
           <div className="welcome-orb welcome-orb-one" /><div className="welcome-orb welcome-orb-two" />
@@ -339,7 +413,6 @@ function HomePage({ events, winners, summary, fundBalances, memberCount, isLogge
           ))}</div>
         ) : <p className="text-sm text-slate-500">Belum ada riwayat pemenang.</p>}
       </section>
-      <div className="grid gap-3 sm:grid-cols-3"><QuickCard icon={CircleDollarSign} title="Lihat iuran" description="Status LUNAS / BELUM periode ini" onClick={() => onNavigate('iuran')} /><QuickCard icon={HandCoins} title="Buku doa" description="Yasin, tahlil, dan doa arwah" onClick={() => onNavigate('doa')} /><QuickCard icon={Images} title="Galeri foto" description="Kenangan kegiatan keluarga" onClick={() => onNavigate('galeri')} /></div>
     </section>
   )
 }
@@ -529,7 +602,34 @@ function YasinReader({ onNext }: { onNext: () => void }) { return <section class
 
 function ReadingReader({ title, items, onNext, nextLabel }: { title: string; items: Array<{ judul: string; ar: string; lt: string }>; onNext?: () => void; nextLabel?: string }) { return <section className="reading-card"><div className="reading-heading"><p className="reading-eyebrow">Bacaan bersama</p><h2 className="mt-2 text-xl font-bold text-slate-900">{title}</h2><p className="mt-1 text-xs text-slate-500">Baca perlahan dengan jeda pada setiap bagian</p></div><div className="mt-7 space-y-1">{items.map((item, index) => <article key={item.judul} className="reading-section"><div className="flex items-start gap-3"><span className="reading-section-number">{index + 1}</span><h3 className="pt-0.5 font-bold leading-relaxed text-slate-900">{item.judul}</h3></div><p className="prayer-arabic mt-4 text-right text-2xl leading-[2.15] text-slate-900 sm:text-3xl">{item.ar}</p><p className="prayer-transliteration">{item.lt}</p></article>)}</div>{onNext && <Button className="mt-6 w-full" onClick={onNext}>{nextLabel} <ChevronRight size={17} /></Button>}</section> }
 
-function GalleryPage({ photos, isLoading, error, canManage, onRetry, onAdd, onEdit, onDelete }: { photos: GalleryPhoto[]; isLoading: boolean; error: string | null; canManage: boolean; onRetry: () => void; onAdd: () => void; onEdit: (photo: GalleryPhoto) => void; onDelete: (photo: GalleryPhoto) => void }) { return <section className="space-y-5" aria-labelledby="gallery-title"><PageHeading eyebrow="Kenangan bersama" title="Galeri foto" description="Simpan dan lihat kembali momen arisan keluarga IKT." />{canManage && <Button onClick={onAdd}><Camera size={17} /> Tambah foto</Button>}{isLoading ? <InlineLoading label="Memuat galeri..." /> : error ? <DataError message={error} onRetry={onRetry} /> : photos.length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{photos.map((photo) => <figure key={photo.id} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><img src={photo.image_url} alt={photo.title} loading="lazy" className="aspect-square w-full object-cover" /><figcaption className="p-3"><p className="truncate text-sm font-bold text-slate-900">{photo.title}</p>{photo.caption && <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-500">{photo.caption}</p>}{photo.taken_on && <p className="mt-2 text-[10px] text-slate-400">{formatDate(photo.taken_on)}</p>}{canManage && <div className="mt-3"><RowActions onEdit={() => onEdit(photo)} onDelete={() => onDelete(photo)} /></div>}</figcaption></figure>)}</div> : <EmptyState icon={Images} title="Belum ada foto" description="Foto kegiatan akan tampil di sini setelah ditambahkan pengurus." />}</section> }
+function GalleryPage({ photos, isLoading, error, canManage, onRetry, onAdd, onEdit, onDelete }: { photos: GalleryPhoto[]; isLoading: boolean; error: string | null; canManage: boolean; onRetry: () => void; onAdd: () => void; onEdit: (photo: GalleryPhoto) => void; onDelete: (photo: GalleryPhoto) => void }) {
+  const [openedPhoto, setOpenedPhoto] = useState<GalleryPhoto | null>(null)
+
+  return (
+    <section className="space-y-5" aria-labelledby="gallery-title">
+      <PageHeading eyebrow="Kenangan bersama" title="Galeri foto" description="Simpan dan lihat kembali momen arisan keluarga IKT. Ketuk foto untuk melihat ukuran penuh." />
+      {canManage && <Button onClick={onAdd}><Camera size={17} /> Tambah foto</Button>}
+      {isLoading ? <InlineLoading label="Memuat galeri..." /> : error ? <DataError message={error} onRetry={onRetry} /> : photos.length ? (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {photos.map((photo) => (
+            <figure key={photo.id} className="overflow-hidden rounded-2xl border-2 border-stone-300 bg-white shadow-sm">
+              <button type="button" className="block w-full" onClick={() => setOpenedPhoto(photo)}>
+                <img src={photo.image_url} alt={photo.title} loading="lazy" className="aspect-square w-full object-cover" />
+              </button>
+              <figcaption className="p-3">
+                <p className="truncate text-base font-bold text-stone-950">{photo.title}</p>
+                {photo.caption && <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-stone-700">{photo.caption}</p>}
+                {photo.taken_on && <p className="mt-2 text-sm font-semibold text-stone-600">{formatDate(photo.taken_on)}</p>}
+                {canManage && <div className="mt-3"><RowActions onEdit={() => onEdit(photo)} onDelete={() => onDelete(photo)} /></div>}
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      ) : <EmptyState icon={Images} title="Belum ada foto" description="Foto kegiatan akan tampil di sini setelah ditambahkan pengurus." />}
+      {openedPhoto && <PhotoViewer photo={openedPhoto} onClose={() => setOpenedPhoto(null)} />}
+    </section>
+  )
+}
 
 function MembersPage({ members, isLoading, error, onRetry, isLoggedIn, canManage, onLogin, onAdd, onEdit, onDelete }: { members: CommunityMember[]; isLoading: boolean; error: string | null; onRetry: () => void; isLoggedIn: boolean; canManage: boolean; onLogin: () => void; onAdd: () => void; onEdit: (member: CommunityMember) => void; onDelete: (member: CommunityMember) => void }) {
   const [query, setQuery] = useState('')
@@ -668,7 +768,6 @@ function TransactionRow({ transaction, canManage, onEdit, onDelete }: { transact
 }
 
 function MetricCard({ label, value, icon: Icon, tone }: { label: string; value: number; icon: typeof WalletCards; tone: 'teal' | 'blue' | 'amber' }) { const styles = { teal: 'bg-teal-50 text-teal-700', blue: 'bg-blue-50 text-blue-700', amber: 'bg-amber-50 text-amber-700' }; return <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><div className={`flex size-9 items-center justify-center rounded-xl ${styles[tone]}`}><Icon size={18} /></div><p className="mt-4 text-xs text-slate-500">{label}</p><p className="mt-1 text-lg font-black tracking-tight text-slate-900">{formatRupiah(value)}</p></div> }
-function QuickCard({ icon: Icon, title, description, onClick }: { icon: typeof CircleDollarSign; title: string; description: string; onClick: () => void }) { return <button type="button" onClick={onClick} className="flex min-h-20 items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md"><span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700"><Icon size={19} /></span><span className="min-w-0 flex-1"><strong className="block text-sm text-slate-900">{title}</strong><small className="mt-1 block text-xs leading-relaxed text-slate-500">{description}</small></span><ChevronRight size={17} className="shrink-0 text-slate-400" /></button> }
 function PageHeading({ eyebrow, title, description }: { eyebrow: string; title: string; description: string }) { return <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-teal-700">{eyebrow}</p><h1 id={title === 'Selamat datang di IKT Connect' ? 'home-title' : undefined} className="mt-2 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">{title}</h1><p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-500">{description}</p></div> }
 function Avatar({ name }: { name: string }) { const initials = name.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || '?'; return <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-sm font-bold text-teal-700">{initials}</span> }
 function Notice({ message, tone = 'info' }: { message: string; tone?: 'info' | 'warning' }) { return <p className={`rounded-xl px-3 py-2.5 text-xs leading-relaxed ${tone === 'warning' ? 'bg-amber-50 text-amber-800' : 'bg-teal-50 text-teal-800'}`}>{message}</p> }

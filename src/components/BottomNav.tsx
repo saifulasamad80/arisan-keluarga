@@ -12,9 +12,9 @@ interface BottomNavProps {
 
 const navigation: Array<{ id: AppTab; label: string; icon: LucideIcon }> = [
   { id: 'beranda', label: 'Beranda', icon: LayoutDashboard },
-  { id: 'keuangan', label: 'Keuangan', icon: WalletCards },
+  { id: 'keuangan', label: 'Kas', icon: WalletCards },
   { id: 'iuran', label: 'Iuran', icon: CircleDollarSign },
-  { id: 'doa', label: 'Buku Doa', icon: BookHeart },
+  { id: 'doa', label: 'Doa', icon: BookHeart },
   { id: 'anggota', label: 'Anggota', icon: UsersRound },
   { id: 'almarhum', label: 'Almarhum', icon: Heart },
   { id: 'galeri', label: 'Galeri', icon: Camera },
@@ -26,8 +26,8 @@ export function BottomNav({ activeTab, onChange, showAudit = false }: BottomNavP
     : navigation
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200/80 bg-white/95 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(15,23,42,0.05)] backdrop-blur">
-      <div className="mx-auto flex max-w-3xl items-center justify-between gap-1 overflow-x-auto">
+    <nav className="fixed inset-x-0 bottom-0 z-20 border-t-4 border-teal-800 bg-white px-2 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-12px_28px_rgba(28,25,23,0.12)]">
+      <div className="mx-auto grid max-w-3xl grid-cols-4 gap-1.5">
         {items.map(({ id, label, icon: Icon }) => {
           const active = activeTab === id
           return (
@@ -36,14 +36,12 @@ export function BottomNav({ activeTab, onChange, showAudit = false }: BottomNavP
               type="button"
               onClick={() => onChange(id)}
               className={cn(
-                'flex min-w-[4.5rem] flex-col items-center gap-1 rounded-xl px-2 py-1 text-[11px] font-medium transition',
-                active ? 'text-teal-700' : 'text-slate-400 hover:text-slate-700',
+                'flex min-h-16 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 text-[13px] font-bold leading-tight',
+                active ? 'bg-teal-800 text-white shadow-md shadow-teal-900/25' : 'bg-stone-100 text-stone-800 hover:bg-amber-100 hover:text-stone-950',
               )}
               aria-current={active ? 'page' : undefined}
             >
-              <span className={cn('rounded-xl p-1.5', active && 'bg-teal-50')}>
-                <Icon size={19} strokeWidth={active ? 2.4 : 2} />
-              </span>
+              <Icon size={24} strokeWidth={active ? 2.6 : 2.2} />
               {label}
             </button>
           )

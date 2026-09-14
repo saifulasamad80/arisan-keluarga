@@ -6,114 +6,126 @@
   font-weight: 400;
 }
 
-.welcome-card { background: linear-gradient(135deg, #0f766e 0%, #115e59 100%); }
+.welcome-card {
+  background: linear-gradient(165deg, #0f766e 0%, #115e59 42%, #134e4a 100%);
+  box-shadow: 0 18px 40px rgb(15 76 69 / 0.28);
+}
+.welcome-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 0.45rem;
+  background: linear-gradient(90deg, #facc15, #f59e0b, #facc15);
+}
 .welcome-orb { position: absolute; border-radius: 9999px; background: rgba(255, 255, 255, 0.08); }
 .welcome-orb-one { right: -3rem; top: -4rem; height: 12rem; width: 12rem; }
-.welcome-orb-two { bottom: -5rem; right: 4rem; height: 10rem; width: 10rem; background: rgba(45, 212, 191, 0.15); }
+.welcome-orb-two { bottom: -5rem; right: 4rem; height: 10rem; width: 10rem; background: rgba(250, 204, 21, 0.18); }
 
 .prayer-index {
   display: flex;
   gap: 0.5rem;
   overflow-x: auto;
-  border: 1px solid #dbe4e4;
-  border-radius: 1rem;
+  border: 2px solid #d6d3d1;
+  border-radius: 1.25rem;
   background: #fff;
   padding: 0.5rem;
-  box-shadow: 0 1px 3px rgb(15 23 42 / 0.04);
+  box-shadow: 0 8px 20px rgb(28 25 23 / 0.06);
   scrollbar-width: thin;
 }
 .prayer-index-item {
   display: flex;
-  min-width: 7.25rem;
+  min-height: 4.25rem;
+  min-width: 8.5rem;
   flex: 1 0 auto;
   align-items: center;
-  gap: 0.625rem;
-  border-radius: 0.75rem;
-  padding: 0.625rem 0.75rem;
-  color: #64748b;
+  gap: 0.75rem;
+  border-radius: 1rem;
+  padding: 0.75rem 0.9rem;
+  color: #44403c;
   text-align: left;
   transition: background-color 160ms ease, color 160ms ease;
 }
-.prayer-index-item:hover { background: #f8fafc; color: #334155; }
+.prayer-index-item:hover { background: #f5f5f4; color: #1c1917; }
 .prayer-index-item-active { background: #0f766e; color: #fff; }
 .prayer-index-item-active:hover { background: #115e59; color: #fff; }
-.prayer-index-item small { color: #94a3b8; }
+.prayer-index-item small { color: #57534e; font-size: 0.85rem; }
 .prayer-index-item-active small { color: #ccfbf1; }
 .prayer-index-number {
   display: inline-flex;
-  height: 1.75rem;
-  width: 1.75rem;
+  height: 2.25rem;
+  width: 2.25rem;
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  background: #f1f5f9;
-  font-size: 0.7rem;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.9rem;
   font-weight: 800;
 }
-.prayer-index-item-active .prayer-index-number { background: rgb(255 255 255 / 0.18); }
+.prayer-index-item-active .prayer-index-number { background: rgb(255 255 255 / 0.22); color: #fff; }
 .prayer-intro, .reading-card, .deceased-card {
-  border: 1px solid #dbe4e4;
+  border: 2px solid #d6d3d1;
   border-radius: 1.5rem;
   background: #fff;
-  box-shadow: 0 4px 12px rgb(15 23 42 / 0.04);
+  box-shadow: 0 10px 24px rgb(28 25 23 / 0.06);
 }
-.prayer-intro { border-color: #ccfbf1; padding: 1.25rem; }
+.prayer-intro { border-color: #99f6e4; padding: 1.25rem; }
 .reading-card { padding: 1.25rem; }
-.reading-heading { border-bottom: 1px solid #e2e8f0; padding-bottom: 1.25rem; text-align: center; }
-.reading-eyebrow { color: #0f766e; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; }
+.reading-heading { border-bottom: 2px solid #e7e5e4; padding-bottom: 1.25rem; text-align: center; }
+.reading-eyebrow { color: #0f766e; font-size: 0.85rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
 .verse-card {
   position: relative;
-  border: 1px solid #e7eeee;
-  border-radius: 1rem;
-  background: #fbfdfc;
-  padding: 1rem;
+  border: 2px solid #d6d3d1;
+  border-radius: 1.15rem;
+  background: #fafaf9;
+  padding: 1.15rem;
 }
 .verse-number, .reading-section-number {
   display: inline-flex;
-  height: 1.75rem;
-  width: 1.75rem;
+  height: 2.25rem;
+  width: 2.25rem;
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  background: #ccfbf1;
-  color: #0f766e;
-  font-size: 0.75rem;
+  background: #0f766e;
+  color: #fff;
+  font-size: 0.9rem;
   font-weight: 800;
 }
 .prayer-transliteration {
-  margin-top: 0.875rem;
-  border-left: 2px solid #99f6e4;
-  padding-left: 0.75rem;
-  color: #64748b;
-  font-size: 0.875rem;
-  font-style: italic;
+  margin-top: 0.95rem;
+  border-left: 4px solid #f59e0b;
+  padding-left: 0.85rem;
+  color: #44403c;
+  font-size: 1.05rem;
+  font-style: normal;
   line-height: 1.8;
 }
 .prayer-arabic {
   font-family: "Noto Naskh Arabic", "Noto Sans Arabic", serif;
   font-weight: 400;
   font-style: normal;
-  line-height: 2.15;
+  line-height: 2.25;
   text-rendering: optimizeLegibility;
 }
-.reading-section { border-bottom: 1px solid #e2e8f0; padding: 1.25rem 0; }
+.reading-section { border-bottom: 2px solid #e7e5e4; padding: 1.35rem 0; }
 .reading-section:first-child { padding-top: 0; }
 .reading-section:last-child { border-bottom: 0; padding-bottom: 0; }
-.reading-section-number { height: 1.5rem; width: 1.5rem; flex: 0 0 auto; background: #f0fdfa; font-size: 0.7rem; }
-.deceased-prayer-list { margin-top: 1.5rem; border-top: 1px solid #e2e8f0; }
-.deceased-prayer-row { display: flex; align-items: center; gap: 0.75rem; border-bottom: 1px solid #e2e8f0; padding: 1rem 0.25rem; }
+.reading-section-number { height: 2rem; width: 2rem; flex: 0 0 auto; }
+.deceased-prayer-list { margin-top: 1.5rem; border-top: 2px solid #e7e5e4; }
+.deceased-prayer-row { display: flex; align-items: center; gap: 0.85rem; border-bottom: 2px solid #e7e5e4; padding: 1.1rem 0.25rem; }
 .deceased-prayer-row:last-child { border-bottom: 0; }
-.deceased-prayer-number { display: inline-flex; height: 1.75rem; width: 1.75rem; flex: 0 0 auto; align-items: center; justify-content: center; border-radius: 9999px; background: #fff1f2; color: #e11d48; font-size: 0.75rem; font-weight: 800; }
-.deceased-prayer-label { flex: 0 0 auto; border-radius: 9999px; background: #f0fdfa; padding: 0.375rem 0.625rem; color: #0f766e; font-size: 0.6875rem; font-weight: 800; }
-.deceased-card { padding: 1rem; }
-.deceased-list { border-top: 1px solid #f1f5f9; }
-.deceased-row { display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem; border-bottom: 1px solid #f1f5f9; padding: 1rem 0.25rem; }
+.deceased-prayer-number { display: inline-flex; height: 2.25rem; width: 2.25rem; flex: 0 0 auto; align-items: center; justify-content: center; border-radius: 9999px; background: #e11d48; color: #fff; font-size: 0.9rem; font-weight: 800; }
+.deceased-prayer-label { flex: 0 0 auto; border-radius: 9999px; background: #0f766e; padding: 0.45rem 0.8rem; color: #fff; font-size: 0.85rem; font-weight: 800; }
+.deceased-card { padding: 1.1rem; }
+.deceased-list { border-top: 2px solid #e7e5e4; }
+.deceased-row { display: flex; align-items: center; flex-wrap: wrap; gap: 0.85rem; border-bottom: 2px solid #f5f5f4; padding: 1.1rem 0.25rem; }
 .deceased-row:last-child { border-bottom: 0; }
-.deceased-icon { display: inline-flex; height: 2.25rem; width: 2.25rem; flex: 0 0 auto; align-items: center; justify-content: center; border-radius: 0.75rem; background: #fff1f2; color: #e11d48; }
+.deceased-icon { display: inline-flex; height: 2.75rem; width: 2.75rem; flex: 0 0 auto; align-items: center; justify-content: center; border-radius: 1rem; background: #fff1f2; color: #be123c; }
 
 @media (min-width: 640px) {
   .prayer-intro, .reading-card { padding: 1.75rem; }
-  .deceased-card { padding: 1.25rem; }
-  .verse-card { padding: 1.25rem; }
+  .deceased-card { padding: 1.35rem; }
+  .verse-card { padding: 1.35rem; }
 }
