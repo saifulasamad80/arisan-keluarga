@@ -447,6 +447,33 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_log: {
+        Row: {
+          id: string
+          actor_id: string | null
+          action: string
+          success: boolean
+          details: Json
+          occurred_at: string
+        }
+        Insert: {
+          id?: string
+          actor_id?: string | null
+          action: string
+          success: boolean
+          details?: Json
+          occurred_at?: string
+        }
+        Update: {
+          id?: string
+          actor_id?: string | null
+          action?: string
+          success?: boolean
+          details?: Json
+          occurred_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       public_cash_transactions: {
@@ -611,10 +638,23 @@ export type Database = {
         }
         Relationships: []
       }
+      master_audit_log: {
+        Row: {
+          id: string
+          actor_id: string | null
+          actor_name: string
+          action: string
+          success: boolean
+          details: Json
+          occurred_at: string
+        }
+        Relationships: []
+      }
     }
     Functions: {
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
       is_admin_or_treasurer: { Args: Record<PropertyKey, never>; Returns: boolean }
+      is_master_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
       assign_manager_role: {
         Args: { p_user_id: string; p_role: Database['public']['Enums']['app_role'] }
         Returns: undefined

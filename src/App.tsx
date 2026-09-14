@@ -56,6 +56,9 @@ import {
   type ArisanWinner,
   type ManagerMember,
 } from './features/community/communityRepository'
+import { AuditPage } from './features/audit/AuditPage'
+import { useAuditLog } from './features/audit/useAuditLog'
+import { isMasterAdminEmail } from './data/access'
 import { ORGANIZATION } from './data/organization'
 import { DOA_NU_ONLINE, TAHLIL_NU_ONLINE, YASIN_LENGKAP } from './data/prayers'
 import { formatRupiah } from './lib/utils'
@@ -101,6 +104,8 @@ function App() {
   const summary = useMemo(() => summarizeCashTransactions(finance.transactions), [finance.transactions])
   const fundBalances = useMemo(() => summarizeFundBalances(finance.transactions), [finance.transactions])
   const canManage = profile?.role === 'admin' || profile?.role === 'treasurer'
+  const isMasterAdmin = profile?.role === 'admin' && isMasterAdminEmail(session?.user.email)
+  const audit = useAuditLog(isMasterAdmin)
   const lunasMember = community.members.find((member) => member.id === lunasMemberId) ?? null
   const batalMember = community.members.find((member) => member.id === batalMemberId) ?? null
 
@@ -135,6 +140,10 @@ function App() {
   }, [session])
 
   useEffect(() => {
+    if (activeTab === 'audit' && !isMasterAdmin) setActiveTab('beranda')
+  }, [activeTab, isMasterAdmin])
+
+  useEffect(() => {
     document.documentElement.style.fontSize = `${textScale * 100}%`
     window.localStorage.setItem('ikt-text-scale', String(textScale))
     return () => {
@@ -153,6 +162,9 @@ function App() {
   }
 
   function renderPage() {
+    if (activeTab === 'audit') {
+      return <AuditPage entries={audit.entries} isLoading={audit.isLoading} error={audit.error} onRetry={() => void audit.reload()} />
+    }
     if (activeTab === 'keuangan') {
       return <FinancePage finance={finance} summary={summary} fundBalances={fundBalances} canManage={canManage} isLoggedIn={Boolean(session)} onExpense={() => requestManagerAction('expense')} onExecuteEvent={() => requestManagerAction('event')} onEditTransaction={(transaction) => openEditor({ type: 'cash', transaction })} onDeleteTransaction={(transaction) => openDelete({ entity: 'cash', id: transaction.id, label: transaction.description, requirePin: true })} />
     }
@@ -175,7 +187,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f7fbfa] pb-24 text-slate-700 md:pb-8">
+    <div className="min-h-screen bg-[#f7fbfa] pb-28 text-slate-700">
       <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 backdrop-blur">
         <div className="mx-auto flex min-h-16 w-full max-w-3xl items-center justify-between gap-3 px-4 sm:px-6">
           <button type="button" className="flex items-center gap-3 text-left" onClick={() => setActiveTab('beranda')}>
@@ -198,7 +210,7 @@ function App() {
       </header>
 
       <main className="mx-auto w-full max-w-3xl px-4 pb-6 pt-6 sm:px-6">{error && <Notice message={error} tone="warning" />}{renderPage()}</main>
-      <BottomNav activeTab={activeTab} onChange={(tab) => { setActiveTab(tab); setShowMobileMenu(false) }} />
+      <BottomNav activeTab={activeTab} showAudit={isMasterAdmin} onChange={(tab) => { setActiveTab(tab); setShowMobileMenu(false) }} />
 
       {showExpenseForm && <ExpenseForm onClose={() => setShowExpenseForm(false)} onSubmit={async (values) => { const saved = await finance.createExpense(values); if (saved) setShowExpenseForm(false) }} error={finance.error} />}
       {showExecuteEventForm && <ExecuteEventForm onClose={() => setShowExecuteEventForm(false)} onSubmit={async (values) => { const saved = await finance.executeEvent(values); if (saved) { setShowExecuteEventForm(false); await community.reload() } return saved }} error={finance.error} />}

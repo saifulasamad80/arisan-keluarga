@@ -1,12 +1,13 @@
-import { BookHeart, Camera, CircleDollarSign, Heart, LayoutDashboard, UsersRound, WalletCards } from 'lucide-react'
+import { BookHeart, Camera, CircleDollarSign, ClipboardList, Heart, LayoutDashboard, UsersRound, WalletCards } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '../lib/utils'
 
-export type AppTab = 'beranda' | 'keuangan' | 'iuran' | 'doa' | 'anggota' | 'almarhum' | 'galeri'
+export type AppTab = 'beranda' | 'keuangan' | 'iuran' | 'doa' | 'anggota' | 'almarhum' | 'galeri' | 'audit'
 
 interface BottomNavProps {
   activeTab: AppTab
   onChange: (tab: AppTab) => void
+  showAudit?: boolean
 }
 
 const navigation: Array<{ id: AppTab; label: string; icon: LucideIcon }> = [
@@ -19,11 +20,15 @@ const navigation: Array<{ id: AppTab; label: string; icon: LucideIcon }> = [
   { id: 'galeri', label: 'Galeri', icon: Camera },
 ]
 
-export function BottomNav({ activeTab, onChange }: BottomNavProps) {
+export function BottomNav({ activeTab, onChange, showAudit = false }: BottomNavProps) {
+  const items = showAudit
+    ? [...navigation, { id: 'audit' as const, label: 'Audit', icon: ClipboardList }]
+    : navigation
+
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200/80 bg-white/95 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(15,23,42,0.05)] backdrop-blur md:static md:mx-auto md:mt-auto md:w-full md:max-w-3xl md:border-t md:bg-white md:shadow-none">
-      <div className="mx-auto flex max-w-2xl items-center justify-between overflow-x-auto md:max-w-none md:justify-center md:gap-7">
-        {navigation.map(({ id, label, icon: Icon }) => {
+    <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200/80 bg-white/95 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(15,23,42,0.05)] backdrop-blur">
+      <div className="mx-auto flex max-w-3xl items-center justify-between gap-1 overflow-x-auto">
+        {items.map(({ id, label, icon: Icon }) => {
           const active = activeTab === id
           return (
             <button
