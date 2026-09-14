@@ -2,10 +2,14 @@
 
 Aplikasi mobile-first untuk mengelola arisan, kas, anggota, agenda, buku doa, dan galeri foto IKT.
 
-Anggota dapat membuka aplikasi dan membaca agenda, foto galeri terbit, serta riwayat
-almarhum/pemenang tanpa login. Data kas, iuran, daftar anggota, dan buku doa hanya
-dapat dibaca setelah login. Login pengurus diperlukan untuk mencatat kas/iuran,
-mengirim pengingat pembayaran, atau menambah foto galeri.
+Anggota dapat membuka aplikasi dan membaca agenda, foto galeri terbit, riwayat
+almarhum/pemenang, serta rekening transfer tanpa login. Data kas, iuran, daftar
+anggota arisan, dan catatan doa hanya dapat dibaca setelah login. Login pengurus
+diperlukan untuk Set Lunas / Batal Lunas, eksekusi acara, pengeluaran, pengingat
+pembayaran, atau menambah foto galeri.
+
+Spesifikasi terkunci ada di `docs/blueprint.md`. Roster operasional adalah
+`arisan_members` (sheet `Status_Iuran`), bukan tabel akun Auth.
 
 ## Stack
 
@@ -122,7 +126,12 @@ Edge Function yang memverifikasi JWT dan role admin.
 Migration `20260914050000_sync_member_names.sql` memperbaiki profil lama yang memakai
 email sebagai nama dengan mengambil `user_metadata.full_name` atau nama spreadsheet
 yang cocok berdasarkan nomor telepon unik. Jalankan migration ini setelah migration
-legacy dan Auth sebelumnya agar nama anggota tampil pada dropdown iuran.
+legacy dan Auth sebelumnya.
+
+Migration `20260914060000_blueprint_locked_operations.sql` wajib untuk operasi
+blueprint: roster `arisan_members`, Set Lunas, Batal Lunas, eksekusi acara, dan
+kolom tuan rumah/petugas doa. Tanpa file ini, halaman iuran dan kas pengurus
+tidak punya jalur mutasi yang dikunci. Lihat `docs/blueprint.md`.
 
 Jika profil lama tidak memiliki nama pada metadata Auth maupun pasangan nomor telepon
 di data legacy, nama tidak dapat ditebak secara aman. Perbaiki satu kali melalui SQL

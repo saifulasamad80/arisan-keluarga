@@ -155,6 +155,8 @@ export type Database = {
           starts_at: string
           location: string | null
           map_url: string | null
+          host_name: string | null
+          prayer_officer: string | null
           legacy_source_key: string | null
           created_by: string
           created_at: string
@@ -167,6 +169,8 @@ export type Database = {
           starts_at: string
           location?: string | null
           map_url?: string | null
+          host_name?: string | null
+          prayer_officer?: string | null
           legacy_source_key?: string | null
           created_by: string
           created_at?: string
@@ -179,6 +183,8 @@ export type Database = {
           starts_at?: string
           location?: string | null
           map_url?: string | null
+          host_name?: string | null
+          prayer_officer?: string | null
           legacy_source_key?: string | null
           created_by?: string
           created_at?: string
@@ -306,7 +312,7 @@ export type Database = {
         }
         Insert: {
           id?: string
-          legacy_source_key: string
+          legacy_source_key?: string
           full_name: string
           lineage_label?: string | null
           father_name?: string | null
@@ -324,6 +330,93 @@ export type Database = {
         }
         Relationships: []
       }
+      arisan_members: {
+        Row: {
+          id: string
+          full_name: string
+          member_type: string
+          period_status: 'LUNAS' | 'BELUM'
+          arrears_periods: number
+          phone: string | null
+          profile_id: string | null
+          legacy_source_key: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          full_name: string
+          member_type?: string
+          period_status?: 'LUNAS' | 'BELUM'
+          arrears_periods?: number
+          phone?: string | null
+          profile_id?: string | null
+          legacy_source_key?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          full_name?: string
+          member_type?: string
+          period_status?: 'LUNAS' | 'BELUM'
+          arrears_periods?: number
+          phone?: string | null
+          profile_id?: string | null
+          legacy_source_key?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      iuran_settlements: {
+        Row: {
+          id: string
+          member_id: string
+          period_count: number
+          member_type: string
+          total_amount: number
+          arrears_before: number
+          arrears_after: number
+          status: 'active' | 'reversed'
+          created_by: string
+          reversed_at: string | null
+          reversed_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          member_id: string
+          period_count: number
+          member_type: string
+          total_amount: number
+          arrears_before: number
+          arrears_after: number
+          status?: 'active' | 'reversed'
+          created_by: string
+          reversed_at?: string | null
+          reversed_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          member_id?: string
+          period_count?: number
+          member_type?: string
+          total_amount?: number
+          arrears_before?: number
+          arrears_after?: number
+          status?: 'active' | 'reversed'
+          created_by?: string
+          reversed_at?: string | null
+          reversed_by?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       legacy_arisan_winners: {
         Row: {
           id: string
@@ -336,7 +429,7 @@ export type Database = {
         }
         Insert: {
           id?: string
-          legacy_source_key: string
+          legacy_source_key?: string
           period_label: string
           winner_name: string
           description?: string | null
@@ -366,6 +459,7 @@ export type Database = {
           occurred_on: string
           created_at: string
           updated_at: string
+          is_locked: boolean
         }
         Relationships: []
       }
@@ -392,6 +486,49 @@ export type Database = {
           starts_at: string
           location: string | null
           map_url: string | null
+          host_name: string | null
+          prayer_officer: string | null
+        }
+        Relationships: []
+      }
+      public_arisan_members: {
+        Row: {
+          id: string
+          full_name: string
+          member_type: string
+          period_status: 'LUNAS' | 'BELUM'
+          arrears_periods: number
+          is_active: boolean
+          updated_at: string
+        }
+        Relationships: []
+      }
+      manager_arisan_members: {
+        Row: {
+          id: string
+          full_name: string
+          member_type: string
+          period_status: 'LUNAS' | 'BELUM'
+          arrears_periods: number
+          phone: string | null
+          is_active: boolean
+          profile_id: string | null
+          updated_at: string
+        }
+        Relationships: []
+      }
+      public_iuran_settlements: {
+        Row: {
+          id: string
+          member_id: string
+          member_name: string
+          period_count: number
+          member_type: string
+          total_amount: number
+          arrears_before: number
+          arrears_after: number
+          status: 'active' | 'reversed'
+          created_at: string
         }
         Relationships: []
       }
@@ -503,6 +640,53 @@ export type Database = {
       }
       reverse_contribution_settlement: {
         Args: { p_settlement_id: string; p_pin: string }
+        Returns: Array<{ success: boolean; message: string }>
+      }
+      settle_member_iuran: {
+        Args: { p_member_id: string; p_period_count: number; p_pin: string }
+        Returns: Array<{
+          success: boolean
+          message: string
+          settlement_id: string | null
+          total_amount: number | null
+        }>
+      }
+      reverse_member_iuran: {
+        Args: { p_member_id: string; p_pin: string }
+        Returns: Array<{ success: boolean; message: string }>
+      }
+      execute_arisan_event: {
+        Args: { p_mode: string; p_pin: string }
+        Returns: Array<{ success: boolean; message: string }>
+      }
+      upsert_arisan_member: {
+        Args: {
+          p_id: string | null
+          p_full_name: string
+          p_member_type: string
+          p_period_status: string
+          p_arrears_periods: number
+          p_phone: string | null
+        }
+        Returns: Array<{ success: boolean; message: string; member_id: string | null }>
+      }
+      delete_arisan_member: {
+        Args: { p_id: string }
+        Returns: Array<{ success: boolean; message: string }>
+      }
+      update_manual_cash_transaction: {
+        Args: {
+          p_id: string
+          p_description: string
+          p_amount: number
+          p_category: string
+          p_occurred_on: string
+          p_pin: string
+        }
+        Returns: Array<{ success: boolean; message: string }>
+      }
+      delete_manual_cash_transaction: {
+        Args: { p_id: string; p_pin: string }
         Returns: Array<{ success: boolean; message: string }>
       }
     }

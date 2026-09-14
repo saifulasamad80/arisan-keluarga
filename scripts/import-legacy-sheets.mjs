@@ -226,6 +226,8 @@ function buildEvents(content, createdBy) {
       starts_at: `${startsOn}T09:00:00Z`,
       location: location || null,
       map_url: clean(row.get('Link_Maps')) || null,
+      host_name: host,
+      prayer_officer: prayerLeader || null,
       created_by: createdBy,
       legacy_source_key: sourceKey('acara-aktif', row.rowNumber),
     })
@@ -365,6 +367,24 @@ async function applyImport(result) {
     const { data, error } = await client.from(table).upsert(rows, { onConflict: 'legacy_source_key', ignoreDuplicates: false }).select('id')
     if (error) throw new Error(`${table}: ${error.message}`)
     applied[name] = data?.length ?? 0
+  }
+
+  const members = contributionRows.map((row) => ({
+    full_name: row.member_name,
+    member_type: /non/i.test(row.member_type) ? 'Non-Arisan' : 'Arisan',
+    period_status: String(row.payment_status).toUpperCase() === 'LUNAS' ? 'LUNAS' : 'BELUM',
+    arrears_periods: Number.isFinite(row.arrears) ? Math.max(0, Math.trunc(row.arrears)) : 0,
+    phone: row.phone,
+    profile_id: row.matched_profile_id,
+    legacy_source_key: row.legacy_source_key,
+    is_active: true,
+  }))
+  if (members.length) {
+    const { data, error } = await client.from('arisan_members').upsert(members, { onConflict: 'legacy_source_key', ignoreDuplicates: false }).select('id')
+    if (error) throw new Error(`arisan_members: ${error.message}`)
+    applied.arisanMembers = data?.length ?? 0
+  } else {
+    applied.arisanMembers = 0
   }
   return applied
 }

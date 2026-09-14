@@ -4,10 +4,12 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { Button } from '../../components/ui/button'
 
+const expenseCategories = ['Iuran Arisan', 'Iuran Wajib', 'Dana Sosial', 'Konsumsi', 'Tabungan Kaos'] as const
+
 const expenseSchema = z.object({
   description: z.string().min(3, 'Keterangan minimal 3 karakter'),
   amount: z.coerce.number().positive('Nominal harus lebih dari 0'),
-  category: z.enum(['Operasional', 'Kegiatan', 'Konsumsi', 'Lainnya']),
+  category: z.enum(expenseCategories),
   pin: z.string().regex(/^\d{4}$/, 'PIN bendahara harus terdiri dari 4 digit'),
 })
 
@@ -27,7 +29,7 @@ export function ExpenseForm({ onClose, onSubmit, error }: ExpenseFormProps) {
     formState: { errors, isSubmitting },
   } = useForm<ExpenseFormInput, unknown, ExpenseFormValues>({
     resolver: zodResolver(expenseSchema),
-    defaultValues: { description: '', amount: 0, category: 'Operasional', pin: '' },
+    defaultValues: { description: '', amount: 0, category: 'Konsumsi', pin: '' },
   })
 
   return (
@@ -67,15 +69,12 @@ export function ExpenseForm({ onClose, onSubmit, error }: ExpenseFormProps) {
             {errors.amount && <span className="mt-1 block text-xs font-normal text-rose-600">{errors.amount.message}</span>}
           </label>
           <label className="block text-sm font-semibold text-slate-700">
-            Kategori
+            Pos dana
             <select
               {...register('category')}
               className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-normal outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
             >
-              <option>Operasional</option>
-              <option>Kegiatan</option>
-              <option>Konsumsi</option>
-              <option>Lainnya</option>
+              {expenseCategories.map((category) => <option key={category} value={category}>{category}</option>)}
             </select>
           </label>
           <label className="block text-sm font-semibold text-slate-700">

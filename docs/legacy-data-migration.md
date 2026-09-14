@@ -116,8 +116,8 @@ node scripts/import-legacy-sheets.mjs \
 Importer akan:
 
 - memasukkan transaksi ke `cash_transactions`;
-- memasukkan `Acara_Aktif` ke `events` tanpa mengimpor saldo manual;
-- memasukkan status iuran ke tabel legacy privat;
+- memasukkan `Acara_Aktif` ke `events` beserta `host_name` dan `prayer_officer`, tanpa mengimpor saldo manual;
+- memasukkan status iuran ke tabel legacy privat dan meng-upsert roster operasional `arisan_members`;
 - mencocokkan nama status iuran ke `profiles.full_name` hanya jika hasilnya tepat
   satu. Nama tanpa match tidak dibuang dan tidak dibuatkan akun Auth palsu;
 - memasukkan daftar almarhum dan riwayat pemenang ke tabel legacy masing-masing;

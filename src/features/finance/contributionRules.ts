@@ -1,4 +1,32 @@
 export type ContributionMemberType = 'arisan' | 'non-arisan'
+export type EventExecutionMode = 'all' | 'arisan' | 'konsumsi'
+export type FundCategory =
+  | 'Iuran Arisan'
+  | 'Iuran Wajib'
+  | 'Dana Sosial'
+  | 'Konsumsi'
+  | 'Tabungan Kaos'
+  | 'Koreksi/Pembatalan'
+
+export const FUND_CATEGORIES: readonly FundCategory[] = [
+  'Iuran Arisan',
+  'Iuran Wajib',
+  'Dana Sosial',
+  'Konsumsi',
+  'Tabungan Kaos',
+  'Koreksi/Pembatalan',
+]
+
+export const MANUAL_EXPENSE_CATEGORIES: readonly FundCategory[] = [
+  'Iuran Arisan',
+  'Iuran Wajib',
+  'Dana Sosial',
+  'Konsumsi',
+  'Tabungan Kaos',
+]
+
+export const EVENT_ARISAN_PAYOUT = 3_220_000
+export const EVENT_CONSUMPTION_PAYOUT = 900_000
 
 export interface ContributionSplit {
   arisan: number

@@ -1,22 +1,43 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import type { ContributionFormValues } from './ContributionForm'
+import type { MemberFormValues } from './MemberForm'
+import type { EventFormValues } from './EventForm'
+import type { DeceasedFormValues } from './DeceasedForm'
+import type { WinnerFormValues } from './WinnerForm'
+import type { PrayerNoteFormValues } from './PrayerNoteForm'
+import type { GalleryFormValues } from './GalleryForm'
 import {
   getCommunityErrorMessage,
   listMembers,
   listPublicContributions,
   listLegacyContributionStatus,
   listLegacyDeceasedPeople,
+  listArisanWinners,
   listGalleryPhotos,
   listMembersForReminder,
-  uploadGalleryPhoto,
+  saveGalleryPhotoRecord,
+  deleteGalleryPhotoRecord,
   settleContribution,
+  reverseContribution,
+  upsertMember,
+  deleteMember as removeMemberRecord,
+  saveEvent as saveEventRecord,
+  deleteEvent as removeEventRecord,
+  saveDeceasedPerson,
+  deleteDeceasedPerson,
+  saveWinner as saveWinnerRecord,
+  deleteWinner as removeWinnerRecord,
+  savePrayerNote as savePrayerNoteRecord,
+  deletePrayerNote as removePrayerNoteRecord,
   type GalleryPhoto,
   type PublicContribution,
   type LegacyContributionStatus,
   type LegacyDeceasedPerson,
+  type ArisanWinner,
+  type ManagerMember,
   listPrayerNotes,
-  listUpcomingEvents,
+  listEvents,
   type CommunityEvent,
   type CommunityMember,
   type PrayerNote,
@@ -29,12 +50,26 @@ interface CommunityState {
   contributions: PublicContribution[]
   legacyContributionStatus: LegacyContributionStatus[]
   legacyDeceasedPeople: LegacyDeceasedPerson[]
+  winners: ArisanWinner[]
   galleryPhotos: GalleryPhoto[]
-  reminderMembers: Array<CommunityMember & { phone: string | null }>
+  reminderMembers: ManagerMember[]
+  isSaving: boolean
   isSavingGallery: boolean
-  saveGalleryPhoto: (values: { title: string; caption: string; takenOn: string; file: File }) => Promise<boolean>
+  saveGalleryPhoto: (values: GalleryFormValues) => Promise<boolean>
+  deleteGalleryPhoto: (photo: GalleryPhoto) => Promise<boolean>
+  saveMember: (values: MemberFormValues) => Promise<boolean>
+  deleteMember: (memberId: string) => Promise<boolean>
+  saveEvent: (values: EventFormValues) => Promise<boolean>
+  deleteEvent: (eventId: string) => Promise<boolean>
+  saveDeceased: (values: DeceasedFormValues) => Promise<boolean>
+  deleteDeceased: (personId: string) => Promise<boolean>
+  saveWinner: (values: WinnerFormValues) => Promise<boolean>
+  deleteWinner: (winnerId: string) => Promise<boolean>
+  savePrayerNote: (values: PrayerNoteFormValues) => Promise<boolean>
+  deletePrayerNote: (noteId: string) => Promise<boolean>
   isSavingContribution: boolean
   saveContribution: (values: ContributionFormValues) => Promise<boolean>
+  reverseContribution: (values: { memberId: string; pin: string }) => Promise<boolean>
   isLoading: boolean
   error: string | null
   reload: () => Promise<void>
@@ -48,10 +83,12 @@ export function useCommunity(userId: string | null): CommunityState {
   const [contributions, setContributions] = useState<PublicContribution[]>([])
   const [legacyContributionStatus, setLegacyContributionStatus] = useState<LegacyContributionStatus[]>([])
   const [legacyDeceasedPeople, setLegacyDeceasedPeople] = useState<LegacyDeceasedPerson[]>([])
+  const [winners, setWinners] = useState<ArisanWinner[]>([])
   const [galleryPhotos, setGalleryPhotos] = useState<GalleryPhoto[]>([])
-  const [reminderMembers, setReminderMembers] = useState<Array<CommunityMember & { phone: string | null }>>([])
+  const [reminderMembers, setReminderMembers] = useState<ManagerMember[]>([])
   const [isLoading, setIsLoading] = useState(Boolean(supabase))
   const [error, setError] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
   const [isSavingGallery, setIsSavingGallery] = useState(false)
   const [isSavingContribution, setIsSavingContribution] = useState(false)
 
@@ -63,6 +100,7 @@ export function useCommunity(userId: string | null): CommunityState {
       setContributions([])
       setLegacyContributionStatus([])
       setLegacyDeceasedPeople([])
+      setWinners([])
       setGalleryPhotos([])
       setReminderMembers([])
       setIsLoading(false)
@@ -73,19 +111,17 @@ export function useCommunity(userId: string | null): CommunityState {
     setError(null)
 
     try {
-      const [nextEvents, nextGalleryPhotos, nextLegacyDeceasedPeople] = await Promise.all([
-        listUpcomingEvents(),
+      const [nextEvents, nextGalleryPhotos, nextLegacyDeceasedPeople, nextWinners] = await Promise.all([
+        listEvents(),
         listGalleryPhotos(),
         listLegacyDeceasedPeople(),
+        listArisanWinners(),
       ])
       let nextPrayerNotes: PrayerNote[] = []
       let nextMembers: CommunityMember[] = []
       let nextContributions: PublicContribution[] = []
       let nextLegacyContributionStatus: LegacyContributionStatus[] = []
 
-      // Data keuangan, iuran, anggota, dan catatan doa tidak boleh diminta
-      // oleh anonymous. Selain mengurangi kebocoran metadata, ini mencegah
-      // halaman publik memanggil view yang memang hanya untuk authenticated.
       if (userId) {
         const [prayerNotes, members, contributions, legacyContributionStatus] = await Promise.all([
           listPrayerNotes(),
@@ -104,6 +140,7 @@ export function useCommunity(userId: string | null): CommunityState {
       setContributions(nextContributions)
       setLegacyContributionStatus(nextLegacyContributionStatus)
       setLegacyDeceasedPeople(nextLegacyDeceasedPeople)
+      setWinners(nextWinners)
       setGalleryPhotos(nextGalleryPhotos)
       if (userId) {
         setReminderMembers(await listMembersForReminder())
@@ -117,7 +154,26 @@ export function useCommunity(userId: string | null): CommunityState {
     }
   }, [userId])
 
-  const saveGalleryPhoto = useCallback(async (values: { title: string; caption: string; takenOn: string; file: File }) => {
+  const runMutation = useCallback(async (task: () => Promise<unknown>) => {
+    if (!userId) {
+      setError('Silakan masuk sebagai pengurus untuk mengubah data.')
+      return false
+    }
+    setIsSaving(true)
+    setError(null)
+    try {
+      await task()
+      await reload()
+      return true
+    } catch (saveError) {
+      setError(getCommunityErrorMessage(saveError))
+      return false
+    } finally {
+      setIsSaving(false)
+    }
+  }, [reload, userId])
+
+  const saveGalleryPhoto = useCallback(async (values: GalleryFormValues) => {
     if (!userId) {
       setError('Silakan masuk sebagai pengurus untuk menambah foto.')
       return false
@@ -125,7 +181,8 @@ export function useCommunity(userId: string | null): CommunityState {
     setIsSavingGallery(true)
     setError(null)
     try {
-      await uploadGalleryPhoto({ ...values, createdBy: userId })
+      const previous = values.id ? galleryPhotos.find((photo) => photo.id === values.id) : undefined
+      await saveGalleryPhotoRecord({ ...values, createdBy: userId, previousImageUrl: previous?.image_url })
       await reload()
       return true
     } catch (saveError) {
@@ -134,7 +191,11 @@ export function useCommunity(userId: string | null): CommunityState {
     } finally {
       setIsSavingGallery(false)
     }
-  }, [reload, userId])
+  }, [galleryPhotos, reload, userId])
+
+  const removeGalleryPhoto = useCallback(async (photo: GalleryPhoto) => {
+    return runMutation(() => deleteGalleryPhotoRecord(photo))
+  }, [runMutation])
 
   const saveContribution = useCallback(async (values: ContributionFormValues) => {
     if (!userId) {
@@ -156,6 +217,25 @@ export function useCommunity(userId: string | null): CommunityState {
     }
   }, [reload, userId])
 
+  const undoContribution = useCallback(async (values: { memberId: string; pin: string }) => {
+    if (!userId) {
+      setError('Silakan masuk sebagai pengurus untuk membatalkan iuran.')
+      return false
+    }
+    setIsSavingContribution(true)
+    setError(null)
+    try {
+      await reverseContribution(values)
+      await reload()
+      return true
+    } catch (saveError) {
+      setError(getCommunityErrorMessage(saveError))
+      return false
+    } finally {
+      setIsSavingContribution(false)
+    }
+  }, [reload, userId])
+
   useEffect(() => {
     void reload()
   }, [reload])
@@ -167,12 +247,32 @@ export function useCommunity(userId: string | null): CommunityState {
     contributions,
     legacyContributionStatus,
     legacyDeceasedPeople,
+    winners,
     galleryPhotos,
     reminderMembers,
+    isSaving,
     isSavingGallery,
     saveGalleryPhoto,
+    deleteGalleryPhoto: removeGalleryPhoto,
+    saveMember: (values) => runMutation(() => upsertMember(values)),
+    deleteMember: (memberId) => runMutation(() => removeMemberRecord(memberId)),
+    saveEvent: (values) => runMutation(() => {
+      if (!userId) throw new Error('Silakan masuk sebagai pengurus untuk mengubah data.')
+      return saveEventRecord(values, userId)
+    }),
+    deleteEvent: (eventId) => runMutation(() => removeEventRecord(eventId)),
+    saveDeceased: (values) => runMutation(() => saveDeceasedPerson(values)),
+    deleteDeceased: (personId) => runMutation(() => deleteDeceasedPerson(personId)),
+    saveWinner: (values) => runMutation(() => saveWinnerRecord(values)),
+    deleteWinner: (winnerId) => runMutation(() => removeWinnerRecord(winnerId)),
+    savePrayerNote: (values) => runMutation(() => {
+      if (!userId) throw new Error('Silakan masuk sebagai pengurus untuk mengubah data.')
+      return savePrayerNoteRecord(values, userId)
+    }),
+    deletePrayerNote: (noteId) => runMutation(() => removePrayerNoteRecord(noteId)),
     isSavingContribution,
     saveContribution,
+    reverseContribution: undoContribution,
     isLoading,
     error,
     reload,
