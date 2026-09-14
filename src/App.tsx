@@ -292,10 +292,22 @@ function PhotoViewer({ photo, onClose }: { photo: GalleryPhoto; onClose: () => v
   )
 }
 
+function HomePhotoTile({ photo, featured = false, onOpen }: { photo: GalleryPhoto; featured?: boolean; onOpen: (photo: GalleryPhoto) => void }) {
+  return (
+    <button type="button" className={`relative block w-full overflow-hidden border-2 border-stone-300 bg-stone-900 text-left shadow-md shadow-stone-900/10 ${featured ? 'rounded-3xl' : 'rounded-2xl'}`} onClick={() => onOpen(photo)}>
+      <img src={photo.image_url} alt={photo.title} loading={featured ? 'eager' : 'lazy'} className={`w-full object-cover ${featured ? 'aspect-[4/3]' : 'aspect-square'}`} />
+      <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-stone-950/85 via-stone-950/35 to-transparent p-3 text-white">
+        <strong className={`block truncate font-black leading-snug ${featured ? 'text-lg' : 'text-sm'}`}>{photo.title}</strong>
+        {featured && photo.taken_on && <small className="mt-1 block text-sm font-semibold text-amber-200">{formatDate(photo.taken_on)}</small>}
+      </span>
+    </button>
+  )
+}
+
 function HomePhotoHighlight({ photos, onOpenGallery }: { photos: GalleryPhoto[]; onOpenGallery: () => void }) {
   const [openedPhoto, setOpenedPhoto] = useState<GalleryPhoto | null>(null)
   const featured = photos[0]
-  const more = photos.slice(1, 3)
+  const extras = photos.slice(1, 3)
 
   if (!featured) return null
 
@@ -308,23 +320,23 @@ function HomePhotoHighlight({ photos, onOpenGallery }: { photos: GalleryPhoto[];
         </div>
         <Button type="button" variant="outline" size="sm" onClick={onOpenGallery}>Semua foto</Button>
       </div>
-      <button type="button" className="relative block w-full overflow-hidden rounded-3xl border-2 border-stone-300 bg-stone-900 text-left shadow-lg shadow-stone-900/15" onClick={() => setOpenedPhoto(featured)}>
-        <img src={featured.image_url} alt={featured.title} className="aspect-[4/3] w-full object-cover" />
-        <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-stone-950/85 via-stone-950/40 to-transparent p-4 text-white">
-          <strong className="block text-lg font-black leading-snug">{featured.title}</strong>
-          {featured.taken_on && <small className="mt-1 block text-sm font-semibold text-amber-200">{formatDate(featured.taken_on)}</small>}
-          <small className="mt-2 block text-sm font-semibold text-white/90">Ketuk untuk melihat ukuran penuh</small>
-        </span>
-      </button>
-      {more.length > 0 && (
+      {photos.length === 1 && <HomePhotoTile photo={featured} featured onOpen={setOpenedPhoto} />}
+      {photos.length === 2 && (
         <div className="grid grid-cols-2 gap-3">
-          {more.map((photo) => (
-            <button key={photo.id} type="button" className="overflow-hidden rounded-2xl border-2 border-stone-300 bg-white text-left shadow-sm" onClick={() => setOpenedPhoto(photo)}>
-              <img src={photo.image_url} alt={photo.title} loading="lazy" className="aspect-square w-full object-cover" />
-              <span className="block truncate px-3 py-2 text-sm font-bold text-stone-900">{photo.title}</span>
-            </button>
+          {photos.slice(0, 2).map((photo) => (
+            <HomePhotoTile key={photo.id} photo={photo} onOpen={setOpenedPhoto} />
           ))}
         </div>
+      )}
+      {photos.length >= 3 && (
+        <>
+          <HomePhotoTile photo={featured} featured onOpen={setOpenedPhoto} />
+          <div className="grid grid-cols-2 gap-3">
+            {extras.map((photo) => (
+              <HomePhotoTile key={photo.id} photo={photo} onOpen={setOpenedPhoto} />
+            ))}
+          </div>
+        </>
       )}
       {openedPhoto && <PhotoViewer photo={openedPhoto} onClose={() => setOpenedPhoto(null)} />}
     </section>
